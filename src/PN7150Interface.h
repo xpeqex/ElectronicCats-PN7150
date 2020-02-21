@@ -28,7 +28,12 @@
 #if defined(TEENSYDUINO) && defined(KINETISK)					// Teensy 3.0, 3.1, 3.2, 3.5, 3.6 :  Special, more optimized I2C library for Teensy boards
 #include <i2c_t3.h>												// Credits Brian "nox771" : see https://forum.pjrc.com/threads/21680-New-I2C-library-for-Teensy3
 #else
-#include <wire.h>												// Otherwise, just use the more standard Wire.h - For ESP32 this will link in a version dedicated for this MCU
+#include <Wire.h>
+#if defined(__AVR__) || defined(__i386__) || defined(ARDUINO_ARCH_SAMD) || defined(ESP8266) || defined(ARDUINO_ARCH_STM32)
+ #define WIRE Wire
+#else // Arduino Due
+ #define WIRE Wire1
+#endif											// Otherwise, just use the more standard Wire.h - For ESP32 this will link in a version dedicated for this MCU
 																// TODO :	i2c_t3.h ensures a maximum I2C message of 259, which is sufficient. Other I2C implementations have shorter buffers (32 bytes)
 																//			See : https://github.com/Strooom/PN7150/issues/7
 #endif
