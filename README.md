@@ -22,10 +22,6 @@ To install this library:
 
 For more info, see https://www.arduino.cc/en/Guide/Libraries
 
-## TO DO
-
-- Support for SAMD21
-
 ### Original Library
 
 Based in the work of [Strooom/PN7150](All documentation is in the Repository Wiki : https://github.com/Strooom/PN7150)
