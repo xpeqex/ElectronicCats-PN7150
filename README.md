@@ -24,7 +24,7 @@ For more info, see https://www.arduino.cc/en/Guide/Libraries
 
 ### Original Library
 
-Based in the work of [Strooom/PN7150](All documentation is in the Repository Wiki : https://github.com/Strooom/PN7150)
+Based in the work of [Strooom/PN7150](https://github.com/Strooom/PN7150)
 
 
 ### Maintainer
