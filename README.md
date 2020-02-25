@@ -8,7 +8,7 @@ PN7150 is the high-performance version of PN7120, the plug’n play NFC solution
 
 ### Quick Installing
 
-To install, use the Arduino Library Manager and search for "mpu6050" and install the library.
+To install, use the Arduino Library Manager and search for "PN7150" and install the library.
 
 ### Manual Installing
 To install this library:
