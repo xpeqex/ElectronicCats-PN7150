@@ -42,12 +42,12 @@ bool PN7150Interface::hasMessage() const
 
 uint8_t PN7150Interface::write(uint8_t txBuffer[], uint32_t txBufferLevel) const
     {
-    Wire.beginTransmission(I2Caddress);									// Setup I2C to transmit
     uint32_t nmbrBytesWritten = 0;
+    Wire.beginTransmission((uint8_t)I2Caddress);								// Setup I2C to transmit
     nmbrBytesWritten = Wire.write(txBuffer, txBufferLevel);				// Copy the data into the I2C transmit buffer
     if (nmbrBytesWritten == txBufferLevel)								// If this worked..
         {
-        uint8_t resultCode;
+        byte resultCode;
         resultCode = Wire.endTransmission();							// .. transmit the buffer, while checking for any errors
         return resultCode;
         }
@@ -71,7 +71,7 @@ uint32_t PN7150Interface::read(uint8_t rxBuffer[]) const
         uint8_t payloadLength = rxBuffer[2];
         if (payloadLength > 0)
             {
-            bytesReceived += Wire.requestFrom(I2Caddress, payloadLength);		// then reading the payload, if any
+            bytesReceived += Wire.requestFrom((int)I2Caddress, payloadLength);		// then reading the payload, if any
             uint32_t index = 3;
             while (index < bytesReceived)
                 {

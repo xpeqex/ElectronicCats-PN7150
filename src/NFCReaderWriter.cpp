@@ -21,7 +21,6 @@ void NFCReaderWriter::initialize()
     {
     theNCI.initialize();								// initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
     theState = ReaderWriterState::initializing;
-    Serial.println("NFC ReaderWriter initialised");
     }
 
 void NFCReaderWriter::run()
@@ -145,6 +144,7 @@ void NFCReaderWriter::run()
         {
         Serial.println("Error : Re-initializing NCI");
         theNCI.initialize();				// initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
+        while(1);
         }
     }
 
