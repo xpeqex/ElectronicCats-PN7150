@@ -8,149 +8,146 @@
 // ###                                                                       ###
 // #############################################################################
 
-
 #include "NFCReaderWriter.h"
 #include "NCI.h"
 
-
 NFCReaderWriter::NFCReaderWriter(NCI &theNCI) : theNCI(theNCI), theState(ReaderWriterState::initializing)
-    {
-    }
+{
+}
 
 void NFCReaderWriter::initialize()
-    {
-    theNCI.initialize();								// initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
+{
+    theNCI.initialize(); // initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
     theState = ReaderWriterState::initializing;
-    }
+}
 
 void NFCReaderWriter::run()
-    {
+{
     theNCI.run();
     switch (theState)
+    {
+    case ReaderWriterState::initializing:
+    {
+        switch (theNCI.getState())
         {
-        case ReaderWriterState::initializing:
-            {
-            switch (theNCI.getState())
-                {
-                case NciState::RfIdleCmd:
-                    {
-                    theNCI.activate();
-                    theState = ReaderWriterState::noTagPresent;
-                    Serial.println("Polling activated");
-                    }
-                break;
-                default:
-                    break;
-                }
-            }
+        case NciState::RfIdleCmd:
+        {
+            theNCI.activate();
+            theState = ReaderWriterState::noTagPresent;
+            Serial.println("Polling activated");
+        }
         break;
+        default:
+            break;
+        }
+    }
+    break;
 
-        case ReaderWriterState::noTagPresent:
+    case ReaderWriterState::noTagPresent:
+    {
+        switch (theNCI.getState())
+        {
+        case NciState::RfWaitForHostSelect:
+        {
+            theState = ReaderWriterState::multipleTagsPresent;
+
+            Tag *tmpTag = nullptr;
+            uint8_t nmbrTags = theNCI.getNmbrOfTags();
+            Serial.print(nmbrTags);
+            Serial.println(" Tags detected :");
+
+            for (uint8_t index = 0; index < nmbrTags; index++)
             {
-            switch (theNCI.getState())
-                {
-                case NciState::RfWaitForHostSelect:
-                    {
-                    theState = ReaderWriterState::multipleTagsPresent;
-
-                    Tag* tmpTag = nullptr;
-                    uint8_t nmbrTags = theNCI.getNmbrOfTags();
-                    Serial.print(nmbrTags);
-                    Serial.println(" Tags detected :");
-
-                    for (uint8_t index = 0; index < nmbrTags; index++)
-                        {
-                        Serial.print("  Tag[");
-                        Serial.print(index);
-                        Serial.print("] : ");
-                        tmpTag = theNCI.getTag(index);
-                        tmpTag->print();
-                        Serial.println("");
-                        }
-                    }
-                break;
-                case NciState::RfPollActive:
-                    {
-                    theState = ReaderWriterState::singleTagPresent;
-                    Serial.println("Single Tag detected :");
-
-                    Tag* tmpTag = nullptr;
-                    Serial.print("  Tag[0] : ");
-                    tmpTag = theNCI.getTag(0);
-                    tmpTag->print();
-                    Serial.println("");
-                    }
-                break;
-                }
+                Serial.print("  Tag[");
+                Serial.print(index);
+                Serial.print("] : ");
+                tmpTag = theNCI.getTag(index);
+                tmpTag->print();
+                Serial.println("");
             }
+        }
         break;
+        case NciState::RfPollActive:
+        {
+            theState = ReaderWriterState::singleTagPresent;
+            Serial.println("Single Tag detected :");
 
-        case ReaderWriterState::singleTagPresent:
-            {
-            switch (theNCI.getState())
-                {
-                case NciState::RfIdleCmd:
-                    theNCI.activate();
-                    break;
-
-                case NciState::RfDiscovery:
-                    if (theNCI.getTagsPresentStatus() == TagsPresentStatus::noTagsPresent)
-                        {
-                        theState = ReaderWriterState::noTagPresent;
-                        Serial.println("Tag removed");
-                        }
-                    break;
-
-                case NciState::RfWaitForHostSelect:
-                    theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
-                    break;
-
-                case NciState::RfPollActive:
-                    theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
-                    break;
-                }
-            }
-        break;
-
-        case ReaderWriterState::multipleTagsPresent:
-            {
-            switch (theNCI.getState())
-                {
-                case NciState::RfIdleCmd:
-                    theNCI.activate();
-                    break;
-
-                case NciState::RfDiscovery:
-                    if (theNCI.getTagsPresentStatus() == TagsPresentStatus::noTagsPresent)
-                        {
-                        theState = ReaderWriterState::noTagPresent;
-                        Serial.println("Tags removed");
-                        }
-                    break;
-
-                case NciState::RfWaitForHostSelect:
-                    theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
-                    break;
-
-                case NciState::RfPollActive:
-                    theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
-                    break;
-                }
-            }
+            Tag *tmpTag = nullptr;
+            Serial.print("  Tag[0] : ");
+            tmpTag = theNCI.getTag(0);
+            tmpTag->print();
+            Serial.println("");
+        }
         break;
         }
+    }
+    break;
+
+    case ReaderWriterState::singleTagPresent:
+    {
+        switch (theNCI.getState())
+        {
+        case NciState::RfIdleCmd:
+            theNCI.activate();
+            break;
+
+        case NciState::RfDiscovery:
+            if (theNCI.getTagsPresentStatus() == TagsPresentStatus::noTagsPresent)
+            {
+                theState = ReaderWriterState::noTagPresent;
+                Serial.println("Tag removed");
+            }
+            break;
+
+        case NciState::RfWaitForHostSelect:
+            theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
+            break;
+
+        case NciState::RfPollActive:
+            theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
+            break;
+        }
+    }
+    break;
+
+    case ReaderWriterState::multipleTagsPresent:
+    {
+        switch (theNCI.getState())
+        {
+        case NciState::RfIdleCmd:
+            theNCI.activate();
+            break;
+
+        case NciState::RfDiscovery:
+            if (theNCI.getTagsPresentStatus() == TagsPresentStatus::noTagsPresent)
+            {
+                theState = ReaderWriterState::noTagPresent;
+                Serial.println("Tags removed");
+            }
+            break;
+
+        case NciState::RfWaitForHostSelect:
+            theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
+            break;
+
+        case NciState::RfPollActive:
+            theNCI.deActivate(NciRfDeAcivationMode::IdleMode);
+            break;
+        }
+    }
+    break;
+    }
 
     if (theNCI.getState() == NciState::Error)
-        {
+    {
         Serial.println("Error : Re-initializing NCI");
-        theNCI.initialize();				// initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
-        while(1);
-        }
+        theNCI.initialize(); // initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
+        while (1)
+            ;
     }
+}
 
 ReaderWriterState NFCReaderWriter::getState() const
-    {
+{
     return theState;
-    }
-
-
+}
