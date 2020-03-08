@@ -21,19 +21,21 @@ PN7150Interface::PN7150Interface(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddr
     // Constructor, initializing IRQpin and VENpin and initializing I2Caddress to a custom value
     }
 
-void PN7150Interface::initialize(void)
-    {
-    pinMode(IRQpin, INPUT);												// IRQ goes from PN7150 to DeviceHost, so is an input
-    pinMode(VENpin, OUTPUT);											// VEN controls the PN7150's mode, so is an output
+int PN7150Interface::initialize()
+{
+  pinMode(IRQpin, INPUT);												// IRQ goes from PN7150 to DeviceHost, so is an input
+  pinMode(VENpin, OUTPUT);											// VEN controls the PN7150's mode, so is an output
 
-    // PN7150 Reset procedure : see PN7150 datasheet 12.6.1, 12.6.2.2, Fig 18 and 16.2.2
-    digitalWrite(VENpin, LOW);											// drive VEN LOW... 
-    delay(1);															// ...for at least 10us
-    digitalWrite(VENpin, HIGH);											// then VEN HIGH again, and wait for 2.5 ms for the device to boot and allow communication
-    delay(3);
+  // PN7150 Reset procedure : see PN7150 datasheet 12.6.1, 12.6.2.2, Fig 18 and 16.2.2
+  digitalWrite(VENpin, LOW);											// drive VEN LOW... 
+  delay(1);															// ...for at least 10us
+  digitalWrite(VENpin, HIGH);											// then VEN HIGH again, and wait for 2.5 ms for the device to boot and allow communication
+  delay(3);
 
-    Wire.begin();														// Start I2C interface
-    }
+  _wire->begin();	
+  
+  return 1;													// Start I2C interface
+}
 
 bool PN7150Interface::hasMessage() const
     {
@@ -43,12 +45,12 @@ bool PN7150Interface::hasMessage() const
 uint8_t PN7150Interface::write(uint8_t txBuffer[], uint32_t txBufferLevel) const
     {
     uint32_t nmbrBytesWritten = 0;
-    Wire.beginTransmission((uint8_t)I2Caddress);								// Setup I2C to transmit
-    nmbrBytesWritten = Wire.write(txBuffer, txBufferLevel);				// Copy the data into the I2C transmit buffer
+    _wire->beginTransmission((uint8_t)I2Caddress);								// Setup I2C to transmit
+    nmbrBytesWritten = _wire->write(txBuffer, txBufferLevel);				// Copy the data into the I2C transmit buffer
     if (nmbrBytesWritten == txBufferLevel)								// If this worked..
         {
         byte resultCode;
-        resultCode = Wire.endTransmission();							// .. transmit the buffer, while checking for any errors
+        resultCode = _wire->endTransmission();							// .. transmit the buffer, while checking for any errors
         return resultCode;
         }
     else
@@ -63,19 +65,19 @@ uint32_t PN7150Interface::read(uint8_t rxBuffer[]) const
     if (hasMessage())													// only try to read something if the PN7150 indicates it has something
         {
         // using 'Split mode' I2C read. See UM10936 section 3.5
-        bytesReceived = Wire.requestFrom((int)I2Caddress, 3);			// first reading the header, as this contains how long the payload will be
+        bytesReceived = _wire->requestFrom((int)I2Caddress, 3);			// first reading the header, as this contains how long the payload will be
 
-        rxBuffer[0] = Wire.read();
-        rxBuffer[1] = Wire.read();
-        rxBuffer[2] = Wire.read();
+        rxBuffer[0] = _wire->read();
+        rxBuffer[1] = _wire->read();
+        rxBuffer[2] = _wire->read();
         uint8_t payloadLength = rxBuffer[2];
         if (payloadLength > 0)
             {
-            bytesReceived += Wire.requestFrom((int)I2Caddress, payloadLength);		// then reading the payload, if any
+            bytesReceived += _wire->requestFrom((int)I2Caddress, payloadLength);		// then reading the payload, if any
             uint32_t index = 3;
             while (index < bytesReceived)
                 {
-                rxBuffer[index] = Wire.read();
+                rxBuffer[index] = _wire->read();
                 index++;
                 }
             }
