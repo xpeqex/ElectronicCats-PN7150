@@ -89,131 +89,9 @@ uint32_t PN7150Interface::read(uint8_t rxBuffer[]) const
     return bytesReceived;
     }
 
-void PN7150Interface::test001()
-// is the VEN signal being properly controlled ? Measure with a multimeter and verify the 2 second high + second low square wave
-    {
-    Serial.println("Test 001 Cycle ---- Start");
-    Serial.println("Driving VEN HIGH");
-    digitalWrite(VENpin, HIGH);
-    delay(2000);
-    Serial.println("Driving VEN LOW");
-    digitalWrite(VENpin, LOW);
-    delay(2000);
-    Serial.println("Test 001 Cycle ---- End");
-    }
-
-void PN7150Interface::test002()
-// is the IRQ signal being properly read ? Remove the NFC module and put a resistor between IRQ and VEN to serve as a loopback observe result in Serial monitor
-    {
-    Serial.println("Test 002 Cycle ---- Start");
-    Serial.println("Driving VEN HIGH");
-    digitalWrite(VENpin, HIGH);
-    delay(10);
-    if (hasMessage())
-        {
-        Serial.println("reading IRQ HIGH - ok");
-        }
-    else
-        {
-        Serial.println("reading IRQ LOW - error");
-        }
-    delay(500);
-    Serial.println("Driving VEN LOW");
-    digitalWrite(VENpin, LOW);
-    delay(10);
-    if (hasMessage())
-        {
-        Serial.println("reading IRQ HIGH - error");
-        }
-    else
-        {
-        Serial.println("reading IRQ LOW - ok");
-        }
-    delay(500);
-    Serial.println("Test 002 Cycle ---- End");
-    }
-
-void PN7150Interface::test003()
-    {
-    // This will write data to the I2C. Monitor with a scope the I2C signals on the bus...
-    Serial.println("Test 003 Cycle ---- Start");
-    uint8_t tmpBuffer[] = { 0x00, 0xFF, 0xAA, 0x55 };
-    uint8_t resultCode;
-    resultCode = write(tmpBuffer, 4);
-    switch (resultCode)
-        {
-        case 0:
-            Serial.println("I2C Write succesfull");
-            break;
-
-        case 1:
-            Serial.println("I2C Write fail : data too long");
-            break;
-
-        case 2:
-            Serial.println("I2C Write fail : address NACK");
-            break;
-
-        case 3:
-            Serial.println("I2C Write fail : data NACK");
-            break;
-
-        default:
-            Serial.println("I2C Other Error");
-        }
-
-    Serial.println("Test 003 Cycle ---- End");
-    delay(500);
-    }
-
-void PN7150Interface::test004()
-    {
-	// This will write data to the I2C, and then Check if the PN7150 indicates it wants to answer..
-	Serial.println("Test 004 Cycle ---- Start");
-
-	// Reset the PN7150, otherwise you can only run this test once..
-	digitalWrite(VENpin, LOW);									// drive VEN LOW for at least 0.5 ms after power came up : datasheet table 16.2.3
-	delay(100);
-	digitalWrite(VENpin, HIGH);									// then VEN HIGH again, and wait for 2.5 ms for the device to boot and allow communication
-	delay(50);
-
-    if (hasMessage())
-        {
-        Serial.println("IRQ was already HIGH before sending - error");
-        }
-    else
-        {
-        Serial.println("IRQ LOW before sending - ok");
-        }
+void PN7150Interface::version()
+{
     uint8_t tmpBuffer[] = { 0x20, 0x00, 0x01, 0x01 };
-    write(tmpBuffer, 4);
-
-    delay(5); // How much delay do you need to check if there is an answer from the Device ? I checked this with a scope and the device responded 2.3ms after the end of the message
-
-    if (hasMessage())
-        {
-        Serial.println("IRQ HIGH after sending - ok");
-        }
-    else
-        {
-        Serial.println("IRQ still LOW after sending - error");
-        }
-
-    Serial.println("Test 004 Cycle ---- End");
-    }
-
-void PN7150Interface::test005()
-    {
-    // This will write CORE_REST_CMD to the PN7150, and then Check if we receive CORE_RESET_RSP back.. See NCI specification V1.0 section 4.1
-    // I am using the reset behaviour of the NCI to test send and response here, as it is otherwise difficult to trigger a read
-    Serial.println("Test 005 Cycle ---- Start");
-	// Reset the PN7150, otherwise you can only run this test once..
-	digitalWrite(VENpin, LOW);									// drive VEN LOW for at least 0.5 ms after power came up : datasheet table 16.2.3
-	delay(100);
-	digitalWrite(VENpin, HIGH);									// then VEN HIGH again, and wait for 2.5 ms for the device to boot and allow communication
-	delay(50);
-
-	uint8_t tmpBuffer[] = { 0x20, 0x00, 0x01, 0x01 };
     write(tmpBuffer, 4);
 
     delay(5); // How much delay do you need to check if there is an answer from the Device ?
@@ -276,8 +154,5 @@ void PN7150Interface::test005()
         {
         Serial.print(nmbrBytesReceived);
         Serial.println(" bytes received, 6 bytes expected - error");
-        }
-
-    Serial.println("Test 005 Cycle ---- End");
-    delay(1000);
-    }
+  }
+}
