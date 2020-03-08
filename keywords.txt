@@ -1,15 +1,22 @@
 #######################################
-# Syntax Coloring Map For Tlv493d
+# Syntax Coloring Map For ElectronicCats PN7150
+#######################################
+# # Class (KEYWORD1)
 #######################################
 
-#######################################
-# Datatypes (KEYWORD1)
-#######################################
+PN7150Interface KEYWORD1
+NCI KEYWORD1
+NFCReaderWriter KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
+begin  KEYWORD2
+write   KEYWORD2
+read    KEYWORD2
+hasMessage  KEYWORD2
+run KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
