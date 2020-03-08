@@ -12,14 +12,14 @@
 
 
 PN7150Interface::PN7150Interface(uint8_t IRQpin, uint8_t VENpin) : IRQpin(IRQpin), VENpin(VENpin), I2Caddress(0x28)
-    {
+{
     // Constructor, initializing IRQpin and VENpin and setting I2Caddress to a default value of 0x28
-    }
+}
 
 PN7150Interface::PN7150Interface(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress) : IRQpin(IRQpin), VENpin(VENpin), I2Caddress(I2Caddress)
-    {
+{
     // Constructor, initializing IRQpin and VENpin and initializing I2Caddress to a custom value
-    }
+}
 
 int PN7150Interface::initialize()
 {
@@ -38,9 +38,9 @@ int PN7150Interface::initialize()
 }
 
 bool PN7150Interface::hasMessage() const
-    {
-    return (HIGH == digitalRead(IRQpin));								// PN7150 indicates it has data by driving IRQ signal HIGH
-    }
+{
+  return (HIGH == digitalRead(IRQpin));								// PN7150 indicates it has data by driving IRQ signal HIGH
+}
 
 uint8_t PN7150Interface::write(uint8_t txBuffer[], uint32_t txBufferLevel) const
     {

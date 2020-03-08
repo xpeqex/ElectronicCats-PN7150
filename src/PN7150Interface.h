@@ -40,20 +40,20 @@
 
 
 class PN7150Interface
-    {
-    public:
-        PN7150Interface(uint8_t IRQpin, uint8_t VENpin);							// Constructor with default I2C address
-        PN7150Interface(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress);		// Constructor with custom I2C address
+{
+  public:
+    PN7150Interface(uint8_t IRQpin, uint8_t VENpin);							// Constructor with default I2C address
+    PN7150Interface(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress);		// Constructor with custom I2C address
     int initialize();														// Initialize the HW interface at the Device Host
-        uint8_t write(uint8_t data[], uint32_t dataLength) const;					// write data from DeviceHost to PN7150. Returns success (0) or Fail (> 0)
-        uint32_t read(uint8_t data[]) const;										// read data from PN7150, returns the amount of bytes read
-        bool hasMessage() const;	
+    uint8_t write(uint8_t data[], uint32_t dataLength) const;					// write data from DeviceHost to PN7150. Returns success (0) or Fail (> 0)
+    uint32_t read(uint8_t data[]) const;										// read data from PN7150, returns the amount of bytes read
+    bool hasMessage() const;
         void test001();											// testing VEN output on the HW
         void test002();											// testing IRQ input on the HW
         void test003();											// testing the sending of an I2C message
         void test004();											// testing the notification of data from the PN7150 by rising IRQ
         void test005();											// does the PN7150 indicate it has data for the DeviceHost to be read
-    private:
+private:
     TwoWire* _wire;
     uint8_t IRQpin;											// MCU pin to which IRQ is connected
     uint8_t VENpin;											// MCU pin to which VEN is connected
