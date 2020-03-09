@@ -46,7 +46,7 @@ public:
     int initialize();                                                    // Initialize the HW interface at the Device Host
     uint8_t write(uint8_t data[], uint32_t dataLength) const;            // write data from DeviceHost to PN7150. Returns success (0) or Fail (> 0)
     uint32_t read(uint8_t data[]) const;                                 // read data from PN7150, returns the amount of bytes read
-    void version(); // does the PN7150 indicate it has data for the DeviceHost to be read
+    uint32_t version(); // does the PN7150 indicate it has data for the DeviceHost to be read
     bool hasMessage() const;
 private:
     uint8_t IRQpin;     // MCU pin to which IRQ is connected

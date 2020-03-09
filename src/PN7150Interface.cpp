@@ -20,8 +20,8 @@ PN7150Interface::PN7150Interface(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddr
     // Constructor, initializing IRQpin and VENpin and initializing I2Caddress to a custom value
 }
 
-void PN7150Interface::initialize(void)
-    {
+int PN7150Interface::initialize()
+{
     pinMode(IRQpin, INPUT);												// IRQ goes from PN7150 to DeviceHost, so is an input
     pinMode(VENpin, OUTPUT);											// VEN controls the PN7150's mode, so is an output
 
@@ -32,7 +32,9 @@ void PN7150Interface::initialize(void)
     delay(3);
 
     Wire.begin();														// Start I2C interface
-    }
+
+    return 1;
+}
 
 bool PN7150Interface::hasMessage() const
 {
@@ -86,10 +88,11 @@ uint32_t PN7150Interface::read(uint8_t rxBuffer[]) const
     return bytesReceived;
 }
 
-void PN7150Interface::version()
+uint32_t PN7150Interface::version()
 {
     uint8_t tmpBuffer[] = {0x20, 0x00, 0x01, 0x01};
     write(tmpBuffer, 4);
+    uint32_t version = 0;
 
     delay(5); // How much delay do you need to check if there is an answer from the Device ?
 
@@ -100,51 +103,9 @@ void PN7150Interface::version()
 
     if (6 == nmbrBytesReceived)
     {
-        Serial.print(nmbrBytesReceived);
-        Serial.println(" bytes received, 6 bytes expected - ok");
-        if (0x40 == tmpRxBuffer[0])
-        {
-            Serial.println("byte[0] = 0x40 : MT = Control Packet Response, PBF = 0, GID = Core = 0 - ok");
-        }
-        else
-        {
-            Serial.print("byte[0] = ");
-            Serial.print(tmpRxBuffer[0]);
-            Serial.println(" - error");
-        }
 
-        if (0x00 == tmpRxBuffer[1])
-        {
-            Serial.println("byte[1] = 0x00 : OID = CORE_RESET_RSP - ok");
-        }
-        else
-        {
-            Serial.print("byte[1] = ");
-            Serial.print(tmpRxBuffer[1]);
-            Serial.println(" - error");
-        }
-
-        if (0x03 == tmpRxBuffer[2])
-        {
-            Serial.println("byte[2] = 0x03 : payload length = 3 bytes - ok");
-        }
-        else
-        {
-            Serial.print("byte[2] = ");
-            Serial.print(tmpRxBuffer[2]);
-            Serial.println(" - error");
-        }
-
-        Serial.print("byte[3] = Status = "); // See NCI V1.0 Specification Table 94. 0x00 = Status_OK
-        Serial.print(tmpRxBuffer[3]);
-        Serial.println("");
-
-        Serial.print("byte[4] = NCI Version = "); // See NCI V1.0 Specification Table 6. 0x17 = V1.7 ?? Not sure about this as I don't have official specs from NCI as they are quite expensive
+        Serial.print("NCI Version = "); // See NCI V1.0 Specification Table 6. 0x17 = V1.7 ?? Not sure about this as I don't have official specs from NCI as they are quite expensive
         Serial.print(tmpRxBuffer[4]);
-        Serial.println("");
-
-        Serial.print("byte[5] = Configuration Status = "); // See NCI V1.0 Specification Table 7. 0x01 = NCI RF Configuration has been reset
-        Serial.print(tmpRxBuffer[5]);
         Serial.println("");
     }
     else
@@ -152,4 +113,5 @@ void PN7150Interface::version()
         Serial.print(nmbrBytesReceived);
         Serial.println(" bytes received, 6 bytes expected - error");
     }
+    return version;
 }
