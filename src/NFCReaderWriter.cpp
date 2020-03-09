@@ -15,7 +15,7 @@ NFCReaderWriter::NFCReaderWriter(NCI &theNCI) : theNCI(theNCI), theState(ReaderW
 {
 }
 
-void NFCReaderWriter::initialize()
+void NFCReaderWriter::begin()
 {
     theNCI.initialize(); // initialize the NCI stateMachine and other. Will in its turn initialize the HW interface
     theState = ReaderWriterState::initializing;
