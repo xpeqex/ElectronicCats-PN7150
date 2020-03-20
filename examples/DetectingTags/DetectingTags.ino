@@ -25,7 +25,7 @@ void setup()
   while(!Serial);
   Serial.println("Example detect tags PN7150");
   
-  theReaderWriter.initialize();								// initialize the application object. It will will in its turn initialize the underlaying NCI object, and this one in its turn the HW interface object
+  theReaderWriter.begin();								// initialize the application object. It will will in its turn initialize the underlaying NCI object, and this one in its turn the HW interface object
 }
 
 void loop()
