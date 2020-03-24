@@ -22,10 +22,6 @@ To install this library:
 
 For more info, see https://www.arduino.cc/en/Guide/Libraries
 
-### Original Library
-
-Based in the work of [Strooom/PN7150](https://github.com/Strooom/PN7150)
-
 
 ### Maintainer
 
@@ -33,4 +29,4 @@ Electronic Cats invests time and resources providing this open source design, pl
 
 ### License
 
-Attribution­NonCommercial­ShareAlike 4.0 International (CC BY­NC­SA 4.0) by Strooom
+MIT
