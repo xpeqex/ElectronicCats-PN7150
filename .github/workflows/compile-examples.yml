@@ -8,7 +8,7 @@ jobs:
      matrix:
        fqbn: [
          "arduino:avr:leonardo",
-         "arduino:avr:uno"
+         "arduino:avr:uno",
          "arduino:samd:mkrwifi1010",
          "arduino:samd:nano_33_iot",
          "arduino:mbed:nano33ble"
