@@ -4,7 +4,7 @@
 # # Class (KEYWORD1)
 #######################################
 
-Electroniccats_PN7150 KEYWORD1
+Electroniccats_PN7150   KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -31,13 +31,5 @@ ReaderReActivate    KEYWORD2
 PrintBuf    KEYWORD2
 ReaderActivateNext  KEYWORD2
 
-#######################################
-# Instances (KEYWORD2)
-#######################################
-
-
-
-#######################################
-# Constants (LITERAL1)
 #######################################
 
