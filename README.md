@@ -1,4 +1,4 @@
-[![Compile Examples Status](https://github.com/ElectronicCats/ElectronicCats-PN7150/workflows/Compile%20Examples/badge.svg)](https://github.com/ElectronicCats/ElectronicCats-PN7150/actions?workflow=Compile+Examples) [![Spell Check Status](https://github.com/ElectronicCats/ElectronicCats-PN7150/workflows/Spell%20Check/badge.svg)](https://github.com/ElectronicCats/ElectronicCats-PN7150/actions?workflow=Spell+Check)
+[![Compile Examples Status](https://github.com/ElectronicCats/ElectronicCats-PN7150/workflows/LibraryBuild/badge.svg)](https://github.com/ElectronicCats/ElectronicCats-PN7150/actions?workflow=LibraryBuild)
 
 # Electronic Cats PN7150
 Library/Driver for NXP PN7150 NFC device
