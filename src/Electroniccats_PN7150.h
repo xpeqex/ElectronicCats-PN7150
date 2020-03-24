@@ -199,7 +199,7 @@ class Electroniccats_PN7150{
         bool CardModeSend (unsigned char *pData, unsigned char DataSize);
         bool CardModeReceive (unsigned char *pData, unsigned char *pDataSize);	
         bool WaitForDiscoveryNotification(RfIntf_t *pRfIntf);
-        static void FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf);
+        void FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf);
         bool ReaderTagCmd (unsigned char *pCommand, unsigned char CommandSize, unsigned char *pAnswer, unsigned char *pAnswerSize);
 		bool StopDiscovery(void);
 		void ProcessReaderMode(RfIntf_t RfIntf, RW_Operation_t Operation);

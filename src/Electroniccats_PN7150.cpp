@@ -341,7 +341,7 @@ bool Electroniccats_PN7150::CardModeReceive (unsigned char *pData, unsigned char
     return NFC_SUCCESS;
 }
 
-static void Electroniccats_PN7150::FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf){
+void Electroniccats_PN7150::FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf){
     uint8_t i, temp;
 
     switch(pRfIntf->ModeTech){
