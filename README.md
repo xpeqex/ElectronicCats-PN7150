@@ -1,4 +1,4 @@
-[![Compile Examples Status](https://github.com/ElectronicCats/ElectronicCats-PN7150/workflows/LibraryBuild/badge.svg)](https://github.com/ElectronicCats/ElectronicCats-PN7150/actions?workflow=LibraryBuild)
+![LibraryBuild](https://github.com/ElectronicCats/ElectronicCats-PN7150/workflows/LibraryBuild/badge.svg?branch=master)
 
 # Electronic Cats PN7150
 Library/Driver for NXP PN7150 NFC device
