@@ -72,14 +72,14 @@ uint8_t Electroniccats_PN7150::writeData(uint8_t txBuffer[], uint32_t txBufferLe
 uint32_t Electroniccats_PN7150::readData(uint8_t rxBuffer[]) const {
     uint32_t bytesReceived; // keeps track of how many bytes we actually received
     if (hasMessage()){       // only try to read something if the PN7150 indicates it has something
-        bytesReceived = Wire.requestFrom((int)_I2Caddress, 3);           // first reading the header, as this contains how long the payload will be
+        bytesReceived = Wire.requestFrom(_I2Caddress, (uint8_t)3);           // first reading the header, as this contains how long the payload will be
 
         rxBuffer[0] = Wire.read();
         rxBuffer[1] = Wire.read();
         rxBuffer[2] = Wire.read();
         uint8_t payloadLength = rxBuffer[2];
         if (payloadLength > 0) {
-            bytesReceived += Wire.requestFrom((int)_I2Caddress, payloadLength);      // then reading the payload, if any
+            bytesReceived += Wire.requestFrom(_I2Caddress, (uint8_t)payloadLength);       // then reading the payload, if any
             uint32_t index = 3;
             while (index < bytesReceived) {
                 rxBuffer[index] = Wire.read();
