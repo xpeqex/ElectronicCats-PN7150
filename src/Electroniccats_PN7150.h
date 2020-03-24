@@ -90,17 +90,6 @@
 #define INTF_NFCDEP          0x3
 #define INTF_TAGCMD          0x80
 
-/*
- * Flag definition used as Protocol values
- */
-#define PROT_UNDETERMINED    0x0
-#define PROT_T1T             0x1
-#define PROT_T2T             0x2
-#define PROT_T3T             0x3
-#define PROT_ISODEP          0x4
-#define PROT_NFCDEP          0x5
-#define PROT_ISO15693        0x6
-#define PROT_MIFARE          0x80
 
 #define MaxPayloadSize		 255				// See NCI specification V1.0, section 3.1
 #define MsgHeaderSize		 3
