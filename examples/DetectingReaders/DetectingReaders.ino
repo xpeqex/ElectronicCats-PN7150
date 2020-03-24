@@ -11,12 +11,15 @@
  * please buy us a round!
  * Distributed as-is; no warranty is given.
  */
-//DON'T FORGET TO ADD "#define CARDEMU_SUPPORT" IN THE LIBRARY FOR THIS EXAMPLE
 
 #include "Electroniccats_PN7150.h"
 #define PN7150_IRQ   (8)
 #define PN7150_VEN   (7)
 #define PN7150_ADDR  (0x28)
+
+#if !defined (CARDEMU_SUPPORT)
+  #error "Don't forget to define CARDEMU_SUPPORT" in the library in Electroniccats_PN7150.h !
+#endif
 
 unsigned char OK[] = {0x90, 0x00}, Cmd[256], CmdSize;
 

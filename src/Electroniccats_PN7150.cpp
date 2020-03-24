@@ -16,9 +16,6 @@
  *
  */
 #include "Electroniccats_PN7150.h"
-//#define RW_SUPPORT                 // Compile with reader/writer support
-#define CARDEMU_SUPPORT          // Compile with emulation support
-
 
 unsigned char DiscoveryTechnologies[] = {
 #ifdef CARDEMU_SUPPORT

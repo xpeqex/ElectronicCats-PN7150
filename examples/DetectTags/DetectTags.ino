@@ -17,6 +17,10 @@
 #define PN7150_VEN   (7)
 #define PN7150_ADDR  (0x28)
 
+#if !defined (RW_SUPPORT)
+  #error "Don't forget to define RW_SUPPORT" in the library in Electroniccats_PN7150.h !
+#endif
+
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
 

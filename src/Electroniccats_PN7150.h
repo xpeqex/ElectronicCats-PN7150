@@ -17,6 +17,14 @@
  * https://github.com/Strooom/PN7150
  *
  */
+
+/*
+* Don't forget to define MODE in the library
+*/
+
+#define RW_SUPPORT               // Compile with reader/writer support
+//#define CARDEMU_SUPPORT       // Compile with emulation support
+
 #include <Arduino.h>                          // Gives us access to all typical Arduino types and functions
                                               // The HW interface between The PN7150 and the DeviceHost is I2C, so we need the I2C library.library
 #if defined(TEENSYDUINO) && defined(KINETISK) // Teensy 3.0, 3.1, 3.2, 3.5, 3.6 :  Special, more optimized I2C library for Teensy boards
@@ -27,9 +35,7 @@
 #define WIRE Wire
 #else // Arduino Due
 #define WIRE Wire1
-#endif
-// TODO :   i2c_t3.h ensures a maximum I2C message of 259, which is sufficient. Other I2C implementations have shorter buffers (32 bytes)
-//          See : https://github.com/Strooom/PN7150/issues/7
+#endif // TODO :   i2c_t3.h ensures a maximum I2C message of 259, which is sufficient. Other I2C implementations have shorter buffers (32 bytes)
 #endif
 
 #define NFC_SUCCESS          0
