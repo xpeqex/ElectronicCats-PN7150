@@ -17,19 +17,19 @@
  */
 #include "Electroniccats_PN7150.h"
 
-unsigned char DiscoveryTechnologies[] = {
-#ifdef CARDEMU_SUPPORT
+
+static uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
+
+unsigned char DiscoveryTechnologiesCE[] = {
         MODE_LISTEN | MODE_POLL
-#endif
-#ifdef RW_SUPPORT
+};
+
+unsigned char DiscoveryTechnologiesRW[] = {
             MODE_POLL | TECH_PASSIVE_NFCA,
             MODE_POLL | TECH_PASSIVE_NFCF,
             MODE_POLL | TECH_PASSIVE_NFCB,
-            MODE_POLL | TECH_PASSIVE_15693,
-#endif
+            MODE_POLL | TECH_PASSIVE_15693
 };
-
-static uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
 
 Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress): 
     _IRQpin(IRQpin), 
@@ -40,7 +40,7 @@ Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin, uin
     pinMode(_VENpin, OUTPUT);    
 }
 
-int Electroniccats_PN7150::begin() {
+uint8_t Electroniccats_PN7150::begin() {
     Wire.begin();   
     digitalWrite(_VENpin, HIGH);                                         
     delay(1);                                                            
@@ -114,7 +114,7 @@ bool Electroniccats_PN7150::getMessage(uint16_t timeout){         // check for m
     return rxMessageLength;
 }
 
-int Electroniccats_PN7150::wakeupNCI() {                         // the device has to wake up using a core reset
+uint8_t Electroniccats_PN7150::wakeupNCI() {                         // the device has to wake up using a core reset
     uint8_t NCICoreReset[] = {0x20, 0x00, 0x01, 0x01};
     //uint8_t Answer[6];
     uint16_t NbBytes = 0;
@@ -142,7 +142,7 @@ int Electroniccats_PN7150::wakeupNCI() {                         // the device h
     return SUCCESS;
 }
 
-int Electroniccats_PN7150::connectNCI(){
+uint8_t Electroniccats_PN7150::connectNCI(){
     uint8_t i = 2;
     uint8_t NCICoreInit[] = {0x20, 0x01, 0x00};
     uint8_t Answer[MAX_NCI_FRAME_SIZE];
@@ -176,31 +176,21 @@ int Electroniccats_PN7150::GetFwVersion(){
     return ((gNfcController_fw_version[0] & 0xFF ) << 16) | ((gNfcController_fw_version[1] & 0xFF ) << 8) | (gNfcController_fw_version[2] & 0xFF);
 }
 
-int Electroniccats_PN7150::ConfigMode(){
-    unsigned mode = 0
-#ifdef CARDEMU_SUPPORT
-              | MODE_CARDEMU
-#endif
-#ifdef RW_SUPPORT
-              | MODE_RW
-#endif
-    ;
+uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE){
+    unsigned mode = 0 | (modeSE == 1 ? MODE_RW : MODE_CARDEMU);
     uint8_t Command[MAX_NCI_FRAME_SIZE];
     uint8_t Answer[MAX_NCI_FRAME_SIZE];
     uint16_t AnswerSize;
     uint8_t Item = 0;
     uint8_t NCIDiscoverMap[] = {0x21, 0x00};
 
-#ifdef CARDEMU_SUPPORT
     //Emulation mode
     const uint8_t DM_CARDEMU[] = {0x4, 0x2, 0x2};
     const uint8_t R_CARDEMU[] = {0x1, 0x3, 0x0, 0x1, 0x4};
-#endif
-#ifdef RW_SUPPORT
     //RW Mode
     const uint8_t DM_RW[] = {0x1, 0x1, 0x1, 0x2, 0x1, 0x1, 0x3, 0x1, 0x1, 0x4, 0x1, 0x2, 0x80, 0x01, 0x80};
     uint8_t NCIPropAct[] = {0x2F, 0x02, 0x00};
-#endif
+
 
     uint8_t NCIRouting[] = {0x21, 0x01, 0x07, 0x00, 0x01};
     uint8_t NCISetConfig_NFCA_SELRSP[] = {0x20, 0x02, 0x04, 0x01, 0x32, 0x01, 0x00};
@@ -208,30 +198,25 @@ int Electroniccats_PN7150::ConfigMode(){
     if(mode == 0) return SUCCESS;
 
     /* Enable Proprietary interface for T4T card presence check procedure */
+    if (modeSE == 1){
+        if (mode == MODE_RW){
+            (void) writeData(NCIPropAct, sizeof(NCIPropAct)); 
+            getMessage();
 
-#ifdef RW_SUPPORT
-    if (mode == MODE_RW){
-        (void) writeData(NCIPropAct, sizeof(NCIPropAct)); 
-        getMessage();
-
-        if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00)) return ERROR;
+            if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00)) return ERROR;
+        }
     }
-#endif
+    
     //* Building Discovery Map command 
     Item = 0;
-
-#ifdef CARDEMU_SUPPORT
-    if (mode & MODE_CARDEMU) {
+    if (mode & MODE_CARDEMU and modeSE == 2) {
         memcpy(&Command[4+(3*Item)], DM_CARDEMU, sizeof(DM_CARDEMU));
         Item++;
     }
-#endif
-#ifdef RW_SUPPORT
-    if (mode & MODE_RW) {
+    if (mode & MODE_RW and modeSE == 1) {
         memcpy(&Command[4+(3*Item)], DM_RW, sizeof(DM_RW));
         Item+=sizeof(DM_RW)/3;
     }
-#endif
     if (Item != 0) {
         memcpy(Command, NCIDiscoverMap, sizeof(NCIDiscoverMap));
         Command[2] = 1 + (Item*3);
@@ -245,40 +230,40 @@ int Electroniccats_PN7150::ConfigMode(){
 
     //* Configuring routing 
     Item = 0;
-#ifdef CARDEMU_SUPPORT
-    if (mode & MODE_CARDEMU) {
-        memcpy(&Command[5+(5*Item)], R_CARDEMU, sizeof(R_CARDEMU));
-        Item++;
-    }
-    if (Item != 0) {
-        memcpy(Command, NCIRouting, sizeof(NCIRouting));
-        Command[2] = 2 + (Item*5);
-        Command[4] = Item;
-        (void) writeData(Command, 3 + Command[2]); 
-        getMessage();
-        if ((rxBuffer[0] != 0x41) || (rxBuffer[1] != 0x01) || (rxBuffer[3] != 0x00))
-            return ERROR;
-    }
-    //* Setting NFCA SEL_RSP 
-    if (mode & MODE_CARDEMU) 
-        NCISetConfig_NFCA_SELRSP[6] += 0x20;
+    if(modeSE == 2){
+        if (mode & MODE_CARDEMU) {
+            memcpy(&Command[5+(5*Item)], R_CARDEMU, sizeof(R_CARDEMU));
+            Item++;
+        }
+        if (Item != 0) {
+            memcpy(Command, NCIRouting, sizeof(NCIRouting));
+            Command[2] = 2 + (Item*5);
+            Command[4] = Item;
+            (void) writeData(Command, 3 + Command[2]); 
+            getMessage();
+            if ((rxBuffer[0] != 0x41) || (rxBuffer[1] != 0x01) || (rxBuffer[3] != 0x00))
+                return ERROR;
+        }
+        //* Setting NFCA SEL_RSP 
+        if (mode & MODE_CARDEMU) 
+            NCISetConfig_NFCA_SELRSP[6] += 0x20;
 
-    if (NCISetConfig_NFCA_SELRSP[6] != 0x00){
-        (void) writeData(NCISetConfig_NFCA_SELRSP, sizeof(NCISetConfig_NFCA_SELRSP)); 
-        getMessage();
+        if (NCISetConfig_NFCA_SELRSP[6] != 0x00){
+            (void) writeData(NCISetConfig_NFCA_SELRSP, sizeof(NCISetConfig_NFCA_SELRSP)); 
+            getMessage();
 
-        if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00))
-            return ERROR;
-        else 
-            return SUCCESS;
+            if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00))
+                return ERROR;
+            else 
+                return SUCCESS;
+        }
     }
-#endif
     return SUCCESS;
 }
 
 
-int Electroniccats_PN7150::StartDiscovery(){
-    unsigned char TechTabSize = sizeof(DiscoveryTechnologies);
+uint8_t Electroniccats_PN7150::StartDiscovery(uint8_t modeSE){
+    unsigned char TechTabSize = sizeof(modeSE == 1 ? DiscoveryTechnologiesRW : DiscoveryTechnologiesCE);
     uint8_t Answer[MAX_NCI_FRAME_SIZE];
     uint16_t AnswerSize;
 
@@ -290,7 +275,7 @@ int Electroniccats_PN7150::StartDiscovery(){
     NCIStartDiscovery[2] = (TechTabSize * 2) + 1;
     NCIStartDiscovery[3] = TechTabSize;
     for (uint8_t i = 0; i<TechTabSize; i++) {
-        NCIStartDiscovery[(i*2)+4] = DiscoveryTechnologies[i];
+        NCIStartDiscovery[(i*2)+4] = (modeSE == 1 ? DiscoveryTechnologiesRW[i] : DiscoveryTechnologiesCE[i]);
         NCIStartDiscovery[(i*2)+5] = 0x01;
     }
 
