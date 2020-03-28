@@ -73,7 +73,7 @@ void PrintBuf(const byte * data, const uint32_t numBytes){ //Print hex data buff
   Serial.println();
 }
 
-void PCD_MIFARE_scenario (void){
+uint8_t PCD_MIFARE_scenario (void){
     Serial.println("Start reading process...");
     bool status;
     unsigned char Resp[256];
@@ -132,6 +132,7 @@ void PCD_MIFARE_scenario (void){
     Serial.print(BLK_NB_MFC, DEC);
     Serial.println("-----------------");
     PrintBuf(Resp+1, RespSize-2);
+    return 0;
 }
 
 void loop(){
