@@ -18,13 +18,6 @@
  *
  */
 
-/*
-* Don't forget to define MODE in the library
-*/
-
-#define RW_SUPPORT               // Compile with reader/writer support
-//#define CARDEMU_SUPPORT       // Compile with emulation support
-
 #include <Arduino.h>                          // Gives us access to all typical Arduino types and functions
                                               // The HW interface between The PN7150 and the DeviceHost is I2C, so we need the I2C library.library
 #if defined(TEENSYDUINO) && defined(KINETISK) // Teensy 3.0, 3.1, 3.2, 3.5, 3.6 :  Special, more optimized I2C library for Teensy boards
@@ -183,14 +176,14 @@ class Electroniccats_PN7150{
 	public:
 		Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress); 
 		int GetFwVersion();
-		int begin(void);
+		uint8_t begin(void);
 	    uint8_t writeData(uint8_t data[], uint32_t dataLength) const;            // write data from DeviceHost to PN7150. Returns success (0) or Fail (> 0)
 	    uint32_t readData(uint8_t data[]) const;                                 // read data from PN7150, returns the amount of bytes read
 	    bool hasMessage() const;
-        int ConfigMode();
-        int StartDiscovery();
-        int connectNCI();
-        int wakeupNCI();
+        uint8_t ConfigMode(uint8_t modeSE);
+        uint8_t StartDiscovery(uint8_t modeSE);
+        uint8_t connectNCI();
+        uint8_t wakeupNCI();
         bool CardModeSend (unsigned char *pData, unsigned char DataSize);
         bool CardModeReceive (unsigned char *pData, unsigned char *pDataSize);	
         bool WaitForDiscoveryNotification(RfIntf_t *pRfIntf);

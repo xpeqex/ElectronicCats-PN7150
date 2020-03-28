@@ -17,12 +17,10 @@
 #define PN7150_VEN   (7)
 #define PN7150_ADDR  (0x28)
 
-#if !defined (RW_SUPPORT)
-  #error "Don't forget to define RW_SUPPORT" in the library in Electroniccats_PN7150.h !
-#endif
-
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
+
+uint8_t mode = 1;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
 void setup(){
   Serial.begin(115200);
@@ -38,18 +36,18 @@ void setup(){
 
 int setupNFC(){
   Serial.println("Initializing...");
-  int setupOK = nfc.connectNCI();                 //Wake up the board
+  int setupOK = nfc.connectNCI();                     //Wake up the board
   if (!setupOK){
-    setupOK = nfc.ConfigMode();                   //Set up the configuration mode
-    if (!setupOK) setupOK = nfc.StartDiscovery(); //NCI Discovery mode
+    setupOK = nfc.ConfigMode(mode);                   //Set up the configuration mode
+    if (!setupOK) setupOK = nfc.StartDiscovery(mode); //NCI Discovery mode
   }
   return setupOK;
 }
 
 int ResetMode(){                                  //Reset the configuration mode after each reading
   Serial.println("Re-initializing...");
-  nfc.ConfigMode();                               
-  nfc.StartDiscovery();
+  nfc.ConfigMode(mode);                               
+  nfc.StartDiscovery(mode);
 }
 
 void PrintBuf(const byte * data, const uint32_t numBytes){ //Print hex data buffer in format
@@ -178,7 +176,7 @@ void loop(){
     Serial.println("CARD REMOVED!");
     
     nfc.StopDiscovery();
-    nfc.StartDiscovery();
+    nfc.StartDiscovery(mode);
   }
   ResetMode();
   delay(500);

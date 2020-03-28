@@ -17,13 +17,12 @@
 #define PN7150_VEN   (7)
 #define PN7150_ADDR  (0x28)
 
-#if !defined (CARDEMU_SUPPORT)
-  #error "Don't forget to define CARDEMU_SUPPORT" in the library in Electroniccats_PN7150.h !
-#endif
-
-unsigned char OK[] = {0x90, 0x00}, Cmd[256], CmdSize;
-
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
+
+unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
+
+uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
+
 void setup(){
   Serial.begin(115200);
   while(!Serial);
@@ -37,10 +36,10 @@ void setup(){
 
 int setupNFC(){
   Serial.println("Initializing...");
-  int setupOK = nfc.connectNCI();
+  int setupOK = nfc.connectNCI();                     //Wake up the board
   if (!setupOK){
-    setupOK = nfc.ConfigMode();
-    if (!setupOK) setupOK = nfc.StartDiscovery();
+    setupOK = nfc.ConfigMode(mode);                   //Set up the configuration mode
+    if (!setupOK) setupOK = nfc.StartDiscovery(mode); //NCI Discovery mode
   }
   return setupOK;
 }
@@ -62,7 +61,7 @@ void loop(){
               default:
                   break;
           }
-          nfc.CardModeSend(OK, sizeof(OK));
+          nfc.CardModeSend(STATUSOK, sizeof(STATUSOK));
       }
   }
 }
