@@ -398,6 +398,7 @@ bool Electroniccats_PN7150::ReaderTagCmd (unsigned char *pCommand, unsigned char
     memcpy(&Cmd[3], pCommand, CommandSize);
 
     (void) writeData(Cmd, CommandSize+3); 
+    getMessage();
     getMessage(1000);
     /* Wait for Answer 1S */
 
