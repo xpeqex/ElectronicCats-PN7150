@@ -19,7 +19,7 @@
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR); // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 
-unsigned char OK[] = {0x90, 0x00}, Cmd[256], CmdSize;
+unsigned char STATUSOK[] = {0x90, 0x00}, Cmd[256], CmdSize;
 
 uint8_t mode = 2;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
 
@@ -61,7 +61,7 @@ void loop(){
               default:
                   break;
           }
-          nfc.CardModeSend(OK, sizeof(OK));
+          nfc.CardModeSend(STATUSOK, sizeof(STATUSOK));
       }
   }
 }
