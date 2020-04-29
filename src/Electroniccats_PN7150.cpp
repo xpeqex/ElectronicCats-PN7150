@@ -672,6 +672,15 @@ bool Electroniccats_PN7150::ConfigureSettings(void)
     uint8_t *NxpNci_CONF;
 	uint16_t NxpNci_CONF_size = 0;
 
+    #if NXP_CORE_CONF
+/* NCI standard dedicated settings
+ * Refer to NFC Forum NCI standard for more details
+ */
+uint8_t NxpNci_CORE_CONF[]={0x20, 0x02, 0x05, 0x01,         /* CORE_SET_CONFIG_CMD */
+    0x00, 0x02, 0x00, 0x01                                  /* TOTAL_DURATION */
+};
+#endif
+
     /* NXP-NCI extension dedicated setting
     * Refer to NFC controller User Manual for more details
     */
@@ -778,6 +787,22 @@ uint8_t NxpNci_RF_CONF_2ndGen[]={0x20, 0x02, 0xB7, 0x14,
     //else
     //{
         /* Apply settings */
+    #if NXP_CORE_CONF
+    if (sizeof(NxpNci_CORE_CONF) != 0)
+    {
+        isResetRequired = true;
+        //NxpNci_HostTransceive(NxpNci_CORE_CONF, sizeof(NxpNci_CORE_CONF), Answer, sizeof(Answer), &AnswerSize);
+        //if ((Answer[0] != 0x40) || (Answer[1] != 0x02) || (Answer[3] != 0x00) || (Answer[4] != 0x00)) return NXPNCI_ERROR;
+        (void) writeData(NxpNci_CORE_CONF, sizeof(NxpNci_CORE_CONF));
+        getMessage();
+		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
+          {
+              Serial.println("NxpNci_CORE_CONF");
+              return ERROR;
+          }
+    }
+#endif
+
 if (sizeof(NxpNci_CORE_CONF_EXTN) != 0)
 	{
         (void) writeData(NxpNci_CORE_CONF_EXTN, sizeof(NxpNci_CORE_CONF_EXTN));
