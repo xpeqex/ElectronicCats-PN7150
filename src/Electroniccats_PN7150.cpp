@@ -702,7 +702,9 @@ uint8_t NxpNci_CORE_CONF[]={0x20, 0x02, 0x05, 0x01,         /* CORE_SET_CONFIG_C
     uint8_t NxpNci_TVDD_CONF_1stGen[]={};
     
     /* CFG1: Vbat is used to generate the VDD(TX) through TXLDO */
-    uint8_t NxpNci_TVDD_CONF_2ndGen[]={0x20, 0x02, 0x07, 0x01, 0xA0, 0x0E, 0x03, 0x02, 0x09, 0x00};
+    //uint8_t NxpNci_TVDD_CONF_2ndGen[]={0x20, 0x02, 0x07, 0x01, 0xA0, 0x0E, 0x03, 0x02, 0x09, 0x00};
+   /* CFG2: external 5V is used to generate the VDD(TX) through TXLDO */
+   uint8_t NxpNci_TVDD_CONF_2ndGen[]={0x20, 0x02, 0x07, 0x01, 0xA0, 0x0E, 0x03, 0x06, 0x64, 0x00};
 
 /* NXP-NCI RF configuration
  * Refer to NFC controller Antenna Design and Tuning Guidelines document for more details
