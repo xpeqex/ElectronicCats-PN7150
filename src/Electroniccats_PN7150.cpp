@@ -876,3 +876,64 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
     }
     return SUCCESS;
 }
+/*
+bool Electroniccats_PN7150::FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate)
+{
+	uint8_t NCIPrbs_1stGen[] = {0x2F, 0x30, 0x04, 0x00, 0x00, 0x01, 0x01};
+	uint8_t NCIPrbs_2ndGen[] = {0x2F, 0x30, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01};
+    uint8_t *NxpNci_cmd;
+    uint16_t NxpNci_cmd_size = 0;
+    uint8_t Answer[MAX_NCI_FRAME_SIZE];
+    uint16_t AnswerSize;
+
+    if(gNfcController_generation == 1)
+    {
+    	NxpNci_cmd = NCIPrbs_1stGen;
+    	NxpNci_cmd_size = sizeof(NCIPrbs_1stGen);
+    	NxpNci_cmd[3] = type;
+    	NxpNci_cmd[4] = bitrate;
+    }
+    else if(gNfcController_generation == 2)
+    {
+    	NxpNci_cmd = NCIPrbs_2ndGen;
+    	NxpNci_cmd_size = sizeof(NCIPrbs_2ndGen);
+    	NxpNci_cmd[5] = type;
+    	NxpNci_cmd[6] = bitrate;
+    }
+
+    if (NxpNci_cmd_size != 0)
+    {
+        //NxpNci_HostTransceive(NxpNci_cmd, NxpNci_cmd_size, Answer, sizeof(Answer), &AnswerSize);
+        //if ((Answer[0] != 0x4F) || (Answer[1] != 0x30) || (Answer[3] != 0x00)) return NXPNCI_ERROR;
+        (void) writeData(NxpNci_cmd, sizeof(NxpNci_cmd)); 
+        getMessage();
+        if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x30) || (rxBuffer[3] != 0x00)) 
+        {
+          Serial.println("NxpNci_FactoryTest_RfOn");
+          return ERROR;
+        }
+    }
+    else
+    {
+    	return NXPNCI_ERROR;
+    }
+
+    return NXPNCI_SUCCESS;
+}
+*/
+bool Electroniccats_PN7150::FactoryTest_RfOn(void)
+{
+	uint8_t NCIRfOn[] = {0x2F, 0x3D, 0x02, 0x20, 0x01};
+
+    //NxpNci_HostTransceive(NCIRfOn, sizeof(NCIRfOn), Answer, sizeof(Answer), &AnswerSize);
+
+    (void) writeData(NCIRfOn, sizeof(NCIRfOn)); 
+    getMessage();
+    if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x3D) || (rxBuffer[3] != 0x00)) 
+    {
+      Serial.println("NxpNci_FactoryTest_RfOn");
+      return ERROR;
+    }
+
+    return SUCCESS;
+}
