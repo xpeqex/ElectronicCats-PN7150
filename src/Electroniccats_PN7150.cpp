@@ -165,9 +165,13 @@ uint8_t Electroniccats_PN7150::connectNCI(){
     else if (rxBuffer[17+rxBuffer[8]] == 0x10) gNfcController_generation = 2;
 
     // Retrieve NXP-NCI NFC Controller FW version 
-    gNfcController_fw_version[0] = Answer[17+Answer[8]]; //0xROM_CODE_V
-    gNfcController_fw_version[1] = Answer[18+Answer[8]]; //0xFW_MAJOR_NO
-    gNfcController_fw_version[2] = Answer[19+Answer[8]]; //0xFW_MINOR_NO
+    gNfcController_fw_version[0] = rxBuffer[17+rxBuffer[8]]; //0xROM_CODE_V
+    gNfcController_fw_version[1] = rxBuffer[18+rxBuffer[8]]; //0xFW_MAJOR_NO
+    gNfcController_fw_version[2] = rxBuffer[19+rxBuffer[8]]; //0xFW_MINOR_NO
+    Serial.println("0xROM_CODE_V: " + String(gNfcController_fw_version[0], HEX));
+    Serial.println("FW_MAJOR_NO: " + String(gNfcController_fw_version[1], HEX));
+    Serial.println("0xFW_MINOR_NO: " + String(gNfcController_fw_version[2], HEX));
+    Serial.println("gNfcController_generation: " + String(gNfcController_generation, HEX));
 
     return SUCCESS;
 }
