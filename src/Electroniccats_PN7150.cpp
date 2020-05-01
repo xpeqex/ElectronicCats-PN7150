@@ -422,6 +422,7 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf){
     static uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
 
     do {
+        Serial.println("Before loop");
         getMessage(1331); //Infinite loop, waiting for response
     }while ((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03)));
     Serial.println("After loop");
@@ -812,8 +813,8 @@ uint8_t NxpNci_RF_CONF_2ndGen[]={0x20, 0x02, 0x94, 0x11,
 #if NXP_CORE_STANDBY
 if (sizeof(NxpNci_CORE_STANDBY) != 0)
 	{
-		Serial.println("NxpNci_CORE_STANDBY");
-        Serial.write(writeData(NxpNci_CORE_STANDBY, sizeof(NxpNci_CORE_STANDBY)));
+
+        (void)(writeData(NxpNci_CORE_STANDBY, sizeof(NxpNci_CORE_STANDBY)));
         getMessage();
 		if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x00) || (rxBuffer[3] != 0x00)) 
         {
@@ -837,12 +838,13 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         return ERROR;
     }
     /* Then compare with current build timestamp, and check RF setting restauration flag */
-    if(!memcmp(&rxBuffer[8], currentTS, sizeof(currentTS)) && (gRfSettingsRestored_flag == false))
+    /*if(!memcmp(&rxBuffer[8], currentTS, sizeof(currentTS)) && (gRfSettingsRestored_flag == false))
     {
-        /* No change, nothing to do */
+        // No change, nothing to do
     }
     else
     {
+        */
     /* Apply settings */
 #if NXP_CORE_CONF_EXTN
     if (sizeof(NxpNci_CORE_CONF_EXTN) != 0)
@@ -909,7 +911,7 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
             Serial.println("NFC Controller memory");
             return ERROR;
         }
-    }
+    //}
 #endif
 
     if(isResetRequired)
@@ -934,58 +936,18 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
     }
     return SUCCESS;
 }
-/*
-bool Electroniccats_PN7150::FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate)
+
+bool Electroniccats_PN7150::testAntenna(void)
 {
-	uint8_t NCIPrbs_1stGen[] = {0x2F, 0x30, 0x04, 0x00, 0x00, 0x01, 0x01};
-	uint8_t NCIPrbs_2ndGen[] = {0x2F, 0x30, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01};
-    uint8_t *NxpNci_cmd;
-    uint16_t NxpNci_cmd_size = 0;
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
 
-    if(gNfcController_generation == 1)
-    {
-    	NxpNci_cmd = NCIPrbs_1stGen;
-    	NxpNci_cmd_size = sizeof(NCIPrbs_1stGen);
-    	NxpNci_cmd[3] = type;
-    	NxpNci_cmd[4] = bitrate;
-    }
-    else if(gNfcController_generation == 2)
-    {
-    	NxpNci_cmd = NCIPrbs_2ndGen;
-    	NxpNci_cmd_size = sizeof(NCIPrbs_2ndGen);
-    	NxpNci_cmd[5] = type;
-    	NxpNci_cmd[6] = bitrate;
-    }
-
-    if (NxpNci_cmd_size != 0)
-    {
-        //NxpNci_HostTransceive(NxpNci_cmd, NxpNci_cmd_size, Answer, sizeof(Answer), &AnswerSize);
-        //if ((Answer[0] != 0x4F) || (Answer[1] != 0x30) || (Answer[3] != 0x00)) return NXPNCI_ERROR;
-        (void) writeData(NxpNci_cmd, sizeof(NxpNci_cmd)); 
-        getMessage();
-        if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x30) || (rxBuffer[3] != 0x00)) 
-        {
-          Serial.println("NxpNci_FactoryTest_RfOn");
-          return ERROR;
-        }
-    }
-    else
-    {
-    	return NXPNCI_ERROR;
-    }
-
-    return NXPNCI_SUCCESS;
-}
-*/
-bool Electroniccats_PN7150::FactoryTest_RfOn(void)
-{
-	uint8_t NCIRfOn[] = {0x2F, 0x3D, 0x02, 0x20, 0x01};
+    // Check NFC antenna
+	 uint8_t testAntenna[] = {0x2F, 0x3D, 0x02, 0xC8, 0x60, 0x03};
+     uint8_t response[MAX_NCI_FRAME_SIZE] = {0};
+     uint16_t respLen;
 
     //NxpNci_HostTransceive(NCIRfOn, sizeof(NCIRfOn), Answer, sizeof(Answer), &AnswerSize);
 
-    (void) writeData(NCIRfOn, sizeof(NCIRfOn)); 
+    (void) writeData(testAntenna, sizeof(testAntenna)); 
     getMessage();
     if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x3D) || (rxBuffer[3] != 0x00)) 
     {
@@ -993,5 +955,88 @@ bool Electroniccats_PN7150::FactoryTest_RfOn(void)
       return ERROR;
     }
 
+ Serial.println("Antenna read: " + String(rxBuffer[0], HEX));
+ Serial.println("Antenna read: " + String(rxBuffer[1], HEX));
+ Serial.println("Antenna read: " + String(rxBuffer[2], HEX));
+ Serial.println("Antenna read: " + String(rxBuffer[3], HEX));
+ Serial.println("Antenna read: " + String(rxBuffer[4], HEX));
+ Serial.println("Antenna read: " + String(rxBuffer[5], HEX));
+
     return SUCCESS;
 }
+
+void Electroniccats_PN7150::test005()
+    {
+    // This will write CORE_REST_CMD to the PN7150, and then Check if we receive CORE_RESET_RSP back.. See NCI specification V1.0 section 4.1
+    // I am using the reset behaviour of the NCI to test send and response here, as it is otherwise difficult to trigger a read
+    Serial.println("Test 005 Cycle ---- Start");
+
+	uint8_t tmpBuffer[] = { 0x20, 0x00, 0x01, 0x01 };
+    //write(tmpBuffer, 4);
+    (void) writeData(tmpBuffer, sizeof(tmpBuffer)); 
+
+    delay(5); // How much delay do you need to check if there is an answer from the Device ?
+
+    uint8_t tmpRxBuffer[260];
+    uint32_t nmbrBytesReceived;
+
+    nmbrBytesReceived = readData(tmpRxBuffer);
+
+    if (6 == nmbrBytesReceived)
+        {
+        Serial.print(nmbrBytesReceived);
+        Serial.println(" bytes received, 6 bytes expected - ok");
+        if (0x40 == tmpRxBuffer[0])
+            {
+            Serial.println("byte[0] = 0x40 : MT = Control Packet Response, PBF = 0, GID = Core = 0 - ok");
+            }
+        else
+            {
+            Serial.print("byte[0] = ");
+            Serial.print(tmpRxBuffer[0]);
+            Serial.println(" - error");
+            }
+
+        if (0x00 == tmpRxBuffer[1])
+            {
+            Serial.println("byte[1] = 0x00 : OID = CORE_RESET_RSP - ok");
+            }
+        else
+            {
+            Serial.print("byte[1] = ");
+            Serial.print(tmpRxBuffer[1]);
+            Serial.println(" - error");
+            }
+
+        if (0x03 == tmpRxBuffer[2])
+            {
+            Serial.println("byte[2] = 0x03 : payload length = 3 bytes - ok");
+            }
+        else
+            {
+            Serial.print("byte[2] = ");
+            Serial.print(tmpRxBuffer[2]);
+            Serial.println(" - error");
+            }
+
+        Serial.print("byte[3] = Status = ");							// See NCI V1.0 Specification Table 94. 0x00 = Status_OK
+        Serial.print(tmpRxBuffer[3]);
+        Serial.println("");
+
+        Serial.print("byte[4] = NCI Version = ");						// See NCI V1.0 Specification Table 6. 0x17 = V1.7 ?? Not sure about this as I don't have official specs from NCI as they are quite expensive
+        Serial.print(tmpRxBuffer[4]);
+        Serial.println("");
+
+        Serial.print("byte[5] = Configuration Status = ");				// See NCI V1.0 Specification Table 7. 0x01 = NCI RF Configuration has been reset
+        Serial.print(tmpRxBuffer[5]);
+        Serial.println("");
+        }
+    else
+        {
+        Serial.print(nmbrBytesReceived);
+        Serial.println(" bytes received, 6 bytes expected - error");
+        }
+
+    Serial.println("Test 005 Cycle ---- End");
+    delay(1000);
+    }
