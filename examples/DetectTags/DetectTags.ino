@@ -144,6 +144,7 @@ void setup(){
     while (1);
   }
   nfc.StartDiscovery(mode); //NCI Discovery mode
+  Serial.println("Waiting for an Card ...");
 }
 
 void loop(){

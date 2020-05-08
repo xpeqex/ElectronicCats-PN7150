@@ -23,30 +23,8 @@
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
 RfIntf_t RfInterface;                                              //Intarface to save data for multiple tags
 
-uint8_t mode = 1;                                                  // modes: 1 = Reader/ Writer, 2 = Emulation
-
-void setup(){
-  Serial.begin(115200);
-  while(!Serial);
-  Serial.println("Read mifare classic data block 4 with PN7150");
-  
-  uint8_t statusNFC = setupNFC();
-  if (!statusNFC)
-    Serial.println("Set up is ok");
-  else
-    Serial.println("Error while setting up the mode, check connections!");
-}
-
-int setupNFC(){
-  Serial.println("Initializing...");
-  int setupOK = nfc.connectNCI();                     //Wake up the board
-  if (!setupOK){
-    setupOK = nfc.ConfigMode(mode);                   //Set up the configuration mode
-    if (!setupOK) setupOK = nfc.StartDiscovery(mode); //NCI Discovery mode
-  }
-  return setupOK;
-}
-
+uint8_t mode = 1; 
+                                                 // modes: 1 = Reader/ Writer, 2 = Emulation
 int ResetMode(){                                      //Reset the configuration mode after each reading
   Serial.println("Re-initializing...");
   nfc.ConfigMode(mode);                               
@@ -95,6 +73,30 @@ void PCD_MIFARE_scenario (void){
     Serial.println("-------------------------");
     
     PrintBuf(Resp+1, RespSize-2);
+}
+
+void setup(){
+  Serial.begin(115200);
+  while(!Serial);
+  Serial.println("Read mifare classic data block 4 with PN7150");
+  
+  Serial.println("Initializing...");                
+  if (nfc.connectNCI()) { //Wake up the board
+    Serial.println("Error while setting up the mode, check connections!");
+    while (1);
+  }
+  
+  if (nfc.ConfigureSettings()) {
+    Serial.println("The Configure Settings is failed!");
+    while (1);
+  }
+  
+  if(nfc.ConfigMode(mode)){ //Set up the configuration mode
+    Serial.println("The Configure Mode is failed!!");
+    while (1);
+  }
+  nfc.StartDiscovery(mode); //NCI Discovery mode
+  Serial.println("Waiting for an Mifare Classic Card ...");
 }
 
 void loop(){
