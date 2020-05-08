@@ -422,10 +422,8 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf){
     static uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
 
     do {
-        Serial.println("Before loop");
         getMessage(1331); //Infinite loop, waiting for response
     }while ((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03)));
-    Serial.println("After loop");
 
     gNextTag_Protocol = PROT_UNDETERMINED;
 
