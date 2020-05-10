@@ -206,8 +206,6 @@ class Electroniccats_PN7150{
 		void PrintBuf(const byte * data, const uint32_t numBytes);
 		bool ReaderActivateNext(RfIntf_t *pRfIntf);	
         bool ConfigureSettings(void);
-        bool testAntenna(void);
-        void test005(void);
 };
 
 #endif
