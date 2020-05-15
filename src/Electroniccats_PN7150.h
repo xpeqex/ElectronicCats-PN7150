@@ -41,6 +41,8 @@
 #define NXP_TVDD_CONF        2 // 1=CFG1, 2=CFG2
 #define NXP_RF_CONF          1
 
+#define NFC_FACTORY_TEST     1
+
 #define NFC_SUCCESS          0
 #define NFC_ERROR            1
 #define TIMEOUT_2S          2000
@@ -97,7 +99,30 @@
 #define MaxPayloadSize		 255				// See NCI specification V1.0, section 3.1
 #define MsgHeaderSize		 3
 
+/***** Factory Test dedicated APIs *********************************************/
+#ifdef NFC_FACTORY_TEST
 
+/*
+ * Definition of technology types
+ */
+typedef enum
+{
+    NFC_A,
+    NFC_B,
+    NFC_F
+} NxpNci_TechType_t;
+
+/*
+ * Definition of bitrate
+ */
+typedef enum
+{
+    BR_106,
+	BR_212,
+	BR_424,
+	BR_848
+} NxpNci_Bitrate_t;
+#endif
 /*
  * Definition of discovered remote device properties information
  */
@@ -206,6 +231,8 @@ class Electroniccats_PN7150{
 		void PrintBuf(const byte * data, const uint32_t numBytes);
 		bool ReaderActivateNext(RfIntf_t *pRfIntf);	
         bool ConfigureSettings(void);
+        bool NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate);
+        bool NxpNci_FactoryTest_RfOn(void);
 };
 
 #endif
