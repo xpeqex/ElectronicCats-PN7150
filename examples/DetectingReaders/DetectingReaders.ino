@@ -27,21 +27,24 @@ void setup(){
   Serial.begin(115200);
   while(!Serial);
   Serial.println("Detect NFC readers with PN7150");
-  uint8_t statusNFC = setupNFC();
-  if (!statusNFC) 
-    Serial.println("Set up is ok");
-  else
-    Serial.println("Error while setting up mode, check connections!");
-}
+  Serial.println("Initializing..."); 
 
-int setupNFC(){
-  Serial.println("Initializing...");
-  int setupOK = nfc.connectNCI();                     //Wake up the board
-  if (!setupOK){
-    setupOK = nfc.ConfigMode(mode);                   //Set up the configuration mode
-    if (!setupOK) setupOK = nfc.StartDiscovery(mode); //NCI Discovery mode
+  if (nfc.connectNCI()) { //Wake up the board
+    Serial.println("Error while setting up the mode, check connections!");
+    while (1);
   }
-  return setupOK;
+  
+  if (nfc.ConfigureSettings()) {
+    Serial.println("The Configure Settings is failed!");
+    while (1);
+  }
+  
+  if(nfc.ConfigMode(mode)){ //Set up the configuration mode
+    Serial.println("The Configure Mode is failed!!");
+    while (1);
+  }
+  nfc.StartDiscovery(mode); //NCI Discovery mode
+  Serial.println("Waiting for an Reader Card ...");
 }
 
 void loop(){

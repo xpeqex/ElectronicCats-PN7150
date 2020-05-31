@@ -31,6 +31,18 @@
 #endif // TODO :   i2c_t3.h ensures a maximum I2C message of 259, which is sufficient. Other I2C implementations have shorter buffers (32 bytes)
 #endif
 
+/* Following definitions specifies which settings will apply when NxpNci_ConfigureSettings()
+ * API is called from the application
+ */
+#define NXP_CORE_CONF        1
+#define NXP_CORE_STANDBY     1
+#define NXP_CORE_CONF_EXTN   1
+#define NXP_CLK_CONF         1 // 1=Xtal, 2=PLL
+#define NXP_TVDD_CONF        2 // 1=CFG1, 2=CFG2
+#define NXP_RF_CONF          1
+
+#define NFC_FACTORY_TEST     1
+
 #define NFC_SUCCESS          0
 #define NFC_ERROR            1
 #define TIMEOUT_2S          2000
@@ -87,7 +99,30 @@
 #define MaxPayloadSize		 255				// See NCI specification V1.0, section 3.1
 #define MsgHeaderSize		 3
 
+/***** Factory Test dedicated APIs *********************************************/
+#ifdef NFC_FACTORY_TEST
 
+/*
+ * Definition of technology types
+ */
+typedef enum
+{
+    NFC_A,
+    NFC_B,
+    NFC_F
+} NxpNci_TechType_t;
+
+/*
+ * Definition of bitrate
+ */
+typedef enum
+{
+    BR_106,
+	BR_212,
+	BR_424,
+	BR_848
+} NxpNci_Bitrate_t;
+#endif
 /*
  * Definition of discovered remote device properties information
  */
@@ -194,7 +229,10 @@ class Electroniccats_PN7150{
 		void PresenceCheck(RfIntf_t RfIntf);
 		bool ReaderReActivate(RfIntf_t *pRfIntf);
 		void PrintBuf(const byte * data, const uint32_t numBytes);
-		bool ReaderActivateNext(RfIntf_t *pRfIntf);																				// read message from I2C into rxBuffer
+		bool ReaderActivateNext(RfIntf_t *pRfIntf);	
+        bool ConfigureSettings(void);
+        bool NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate);
+        bool NxpNci_FactoryTest_RfOn(void);
 };
 
 #endif
