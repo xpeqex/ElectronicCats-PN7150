@@ -1,3 +1,7 @@
+<a href="https://github.com/sponsors/ElectronicCats">
+  <img src="https://electroniccats.com/wp-content/uploads/2020/07/Badge_GHS.png" height="104" />
+</a>
+
 ![LibraryBuild](https://github.com/ElectronicCats/ElectronicCats-PN7150/workflows/LibraryBuild/badge.svg?branch=master)
 
 # Electronic Cats PN7150
