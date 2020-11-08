@@ -13,8 +13,8 @@
  */
 
 #include "Electroniccats_PN7150.h"          
-#define PN7150_IRQ   (8)
-#define PN7150_VEN   (7)
+#define PN7150_IRQ   (15)
+#define PN7150_VEN   (14)
 #define PN7150_ADDR  (0x28)
 
 Electroniccats_PN7150 nfc(PN7150_IRQ, PN7150_VEN, PN7150_ADDR);    // creates a global NFC device interface object, attached to pins 7 (IRQ) and 8 (VEN) and using the default I2C address 0x28
@@ -124,7 +124,7 @@ void displayCardInfo(RfIntf_t RfIntf){ //Funtion in charge to show the card/s in
 }
 
 void setup(){
-  Serial.begin(115200);
+  Serial.begin(9600);
   while(!Serial);
   Serial.println("Detect NFC tags with PN7150");
   
