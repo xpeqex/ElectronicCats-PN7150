@@ -13,8 +13,8 @@
  */
  
 #include "Electroniccats_PN7150.h"          
-#define PN7150_IRQ   (8)
-#define PN7150_VEN   (7)
+#define PN7150_IRQ   (15)
+#define PN7150_VEN   (14)
 #define PN7150_ADDR  (0x28)
 
 #define BLK_NB_MFC      4                                          // Block that wants to be read
@@ -114,7 +114,7 @@ uint8_t PCD_MIFARE_scenario (void){
 }
 
 void setup(){
-  Serial.begin(115200);
+  Serial.begin(9600);
   while(!Serial);
   Serial.println("Write mifare classic data block 4 with PN7150");
   
