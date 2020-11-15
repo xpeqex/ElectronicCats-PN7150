@@ -1,10 +1,10 @@
 /**
  * NXP PN7150 Driver 
- * Authors: 
+ * Porting authors: 
  *        Salvador Mendoza - @Netxing - salmg.net
  *        Andres Sabas - Electronic Cats - Electroniccats.com
  *
- *  March 2020
+ *  November 2020
  * 
  * This code is beerware; if you see me (or any other collaborator 
  * member) at the local, and you've found our code helpful, 
@@ -16,19 +16,40 @@
  *
  */
 #include "Electroniccats_PN7150.h"
+#include "P2P_NDEF.h"
+#include "ndef_helper.h"
+#include "RW_NDEF.h"
+#include "T4T_NDEF_emu.h"
 
+uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
 
-static uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
+uint8_t NCIStartDiscovery_length = 0;
+uint8_t NCIStartDiscovery[30];
 
-unsigned char DiscoveryTechnologiesCE[] = {
-        MODE_LISTEN | MODE_POLL
+unsigned char DiscoveryTechnologiesCE[] = { //Emulation
+    MODE_LISTEN | MODE_POLL
 };
 
-unsigned char DiscoveryTechnologiesRW[] = {
-            MODE_POLL | TECH_PASSIVE_NFCA,
-            MODE_POLL | TECH_PASSIVE_NFCF,
-            MODE_POLL | TECH_PASSIVE_NFCB,
-            MODE_POLL | TECH_PASSIVE_15693
+unsigned char DiscoveryTechnologiesRW[] = { //Read & Write
+    MODE_POLL | TECH_PASSIVE_NFCA,
+    MODE_POLL | TECH_PASSIVE_NFCF,
+    MODE_POLL | TECH_PASSIVE_NFCB,
+    MODE_POLL | TECH_PASSIVE_15693
+};
+
+unsigned char DiscoveryTechnologiesP2P[] = {//P2P 
+    MODE_POLL | TECH_PASSIVE_NFCA,
+    MODE_POLL | TECH_PASSIVE_NFCF,
+
+    /* Only one POLL ACTIVE mode can be enabled, if both are defined only NFCF applies */
+    MODE_POLL | TECH_ACTIVE_NFCA,
+    //MODE_POLL | TECH_ACTIVE_NFCF,
+
+    //MODE_LISTEN | TECH_PASSIVE_NFCA,
+
+    MODE_LISTEN | TECH_PASSIVE_NFCF,
+    MODE_LISTEN | TECH_ACTIVE_NFCA,
+    MODE_LISTEN | TECH_ACTIVE_NFCF
 };
 
 Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress): 
@@ -70,16 +91,16 @@ uint8_t Electroniccats_PN7150::writeData(uint8_t txBuffer[], uint32_t txBufferLe
 }
 
 uint32_t Electroniccats_PN7150::readData(uint8_t rxBuffer[]) const {
-    uint32_t bytesReceived; // keeps track of how many bytes we actually received
+    uint32_t bytesReceived;  // keeps track of how many bytes we actually received
     if (hasMessage()){       // only try to read something if the PN7150 indicates it has something
-        bytesReceived = Wire.requestFrom(_I2Caddress, (uint8_t)3);           // first reading the header, as this contains how long the payload will be
+        bytesReceived = Wire.requestFrom(_I2Caddress, (uint8_t)3);                  // first reading the header, as this contains how long the payload will be
 
         rxBuffer[0] = Wire.read();
         rxBuffer[1] = Wire.read();
         rxBuffer[2] = Wire.read();
         uint8_t payloadLength = rxBuffer[2];
         if (payloadLength > 0) {
-            bytesReceived += Wire.requestFrom(_I2Caddress, (uint8_t)payloadLength);       // then reading the payload, if any
+            bytesReceived += Wire.requestFrom(_I2Caddress, (uint8_t)payloadLength); // then reading the payload, if any
             uint32_t index = 3;
             while (index < bytesReceived) {
                 rxBuffer[index] = Wire.read();
@@ -109,14 +130,13 @@ bool Electroniccats_PN7150::getMessage(uint16_t timeout){         // check for m
     while(!isTimeOut()){
         rxMessageLength = readData(rxBuffer);
         if (rxMessageLength) break;
-        else if(timeout == 1331) setTimeOut(timeout);
+        else if(timeout == 1337) setTimeOut(timeout);
     }
     return rxMessageLength;
 }
 
-uint8_t Electroniccats_PN7150::wakeupNCI() {                         // the device has to wake up using a core reset
+uint8_t Electroniccats_PN7150::wakeupNCI() {                      // the device has to wake up using a core reset
     uint8_t NCICoreReset[] = {0x20, 0x00, 0x01, 0x01};
-    //uint8_t Answer[6];
     uint16_t NbBytes = 0;
 
     /* Reset RF settings restauration flag */
@@ -142,12 +162,12 @@ uint8_t Electroniccats_PN7150::wakeupNCI() {                         // the devi
     return SUCCESS;
 }
 
-uint8_t Electroniccats_PN7150::connectNCI(){
+uint8_t Electroniccats_PN7150::connectNCI() {
     uint8_t i = 2;
     uint8_t NCICoreInit[] = {0x20, 0x01, 0x00};
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
- 
+
+
+
     // Open connection to NXPNCI 
     begin();
     // Loop until NXPNCI answers 
@@ -176,24 +196,35 @@ uint8_t Electroniccats_PN7150::connectNCI(){
     return SUCCESS;
 }
 
-int Electroniccats_PN7150::GetFwVersion(){
+
+int Electroniccats_PN7150::GetFwVersion() {
     return ((gNfcController_fw_version[0] & 0xFF ) << 16) | ((gNfcController_fw_version[1] & 0xFF ) << 8) | (gNfcController_fw_version[2] & 0xFF);
 }
 
-uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE){
-    unsigned mode = 0 | (modeSE == 1 ? MODE_RW : MODE_CARDEMU);
+uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE) {
+    unsigned mode = (
+                        modeSE == 1 ? MODE_RW : 
+                        modeSE == 2 ? MODE_CARDEMU :
+                        MODE_P2P
+                    );
+    
     uint8_t Command[MAX_NCI_FRAME_SIZE];
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
+
     uint8_t Item = 0;
     uint8_t NCIDiscoverMap[] = {0x21, 0x00};
 
     //Emulation mode
     const uint8_t DM_CARDEMU[] = {0x4, 0x2, 0x2};
     const uint8_t R_CARDEMU[] = {0x1, 0x3, 0x0, 0x1, 0x4};
+
     //RW Mode
     const uint8_t DM_RW[] = {0x1, 0x1, 0x1, 0x2, 0x1, 0x1, 0x3, 0x1, 0x1, 0x4, 0x1, 0x2, 0x80, 0x01, 0x80};
     uint8_t NCIPropAct[] = {0x2F, 0x02, 0x00};
+
+    //P2P Support
+    const uint8_t DM_P2P[] = {0x5, 0x3, 0x3};
+    const uint8_t R_P2P[] = {0x1, 0x3, 0x0, 0x1, 0x5};
+    uint8_t NCISetConfig_NFC[] = {0x20, 0x02, 0x1F, 0x02, 0x29, 0x0D, 0x46, 0x66, 0x6D, 0x01, 0x01, 0x11, 0x03, 0x02, 0x00, 0x01, 0x04, 0x01, 0xFA, 0x61, 0x0D, 0x46, 0x66, 0x6D, 0x01, 0x01, 0x11, 0x03, 0x02, 0x00, 0x01, 0x04, 0x01, 0xFA};
 
 
     uint8_t NCIRouting[] = {0x21, 0x01, 0x07, 0x00, 0x01};
@@ -210,11 +241,12 @@ uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE){
             if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00)) return ERROR;
         }
     }
-    
+
     //* Building Discovery Map command 
     Item = 0;
-    if (mode & MODE_CARDEMU and modeSE == 2) {
-        memcpy(&Command[4+(3*Item)], DM_CARDEMU, sizeof(DM_CARDEMU));
+
+    if ((mode & MODE_CARDEMU and modeSE == 2) || (mode & MODE_P2P and modeSE == 3)) {
+        memcpy(&Command[4+(3*Item)], (modeSE == 2 ? DM_CARDEMU : DM_P2P), sizeof((modeSE == 2 ? DM_CARDEMU : DM_P2P)));
         Item++;
     }
     if (mode & MODE_RW and modeSE == 1) {
@@ -234,11 +266,11 @@ uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE){
 
     //* Configuring routing 
     Item = 0;
-    if(modeSE == 2){
-        if (mode & MODE_CARDEMU) {
-            memcpy(&Command[5+(5*Item)], R_CARDEMU, sizeof(R_CARDEMU));
-            Item++;
-        }
+
+    if(modeSE == 2 || modeSE == 3){ //Emulation or P2P
+        memcpy(&Command[5+(5*Item)], (modeSE == 2 ? R_CARDEMU : R_P2P), sizeof((modeSE == 2 ? R_CARDEMU : R_P2P)));
+        Item++;
+
         if (Item != 0) {
             memcpy(Command, NCIRouting, sizeof(NCIRouting));
             Command[2] = 2 + (Item*5);
@@ -248,9 +280,7 @@ uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE){
             if ((rxBuffer[0] != 0x41) || (rxBuffer[1] != 0x01) || (rxBuffer[3] != 0x00))
                 return ERROR;
         }
-        //* Setting NFCA SEL_RSP 
-        if (mode & MODE_CARDEMU) 
-            NCISetConfig_NFCA_SELRSP[6] += 0x20;
+        NCISetConfig_NFCA_SELRSP[6] += (modeSE == 2 ? 0x20 : 0x40);
 
         if (NCISetConfig_NFCA_SELRSP[6] != 0x00){
             (void) writeData(NCISetConfig_NFCA_SELRSP, sizeof(NCISetConfig_NFCA_SELRSP)); 
@@ -261,25 +291,37 @@ uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE){
             else 
                 return SUCCESS;
         }
+
+        if (mode & MODE_P2P and modeSE == 3){
+            (void) writeData(NCISetConfig_NFC, sizeof(NCISetConfig_NFC)); 
+            getMessage();
+
+            if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00)) return ERROR;
+        }
     }
     return SUCCESS;
 }
 
 
-uint8_t Electroniccats_PN7150::StartDiscovery(uint8_t modeSE){
-    unsigned char TechTabSize = sizeof(modeSE == 1 ? DiscoveryTechnologiesRW : DiscoveryTechnologiesCE);
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
+uint8_t Electroniccats_PN7150::StartDiscovery(uint8_t modeSE) {
+    unsigned char TechTabSize = sizeof(
+                                        modeSE == 1 ? DiscoveryTechnologiesRW : 
+                                        modeSE == 2 ? DiscoveryTechnologiesCE :
+                                        DiscoveryTechnologiesP2P
+                                      );
 
-    uint8_t NCIStartDiscovery[30];
-    uint8_t NCIStartDiscovery_length = 0;
-
+    NCIStartDiscovery_length = 0;
     NCIStartDiscovery[0] = 0x21;
     NCIStartDiscovery[1] = 0x03;
     NCIStartDiscovery[2] = (TechTabSize * 2) + 1;
     NCIStartDiscovery[3] = TechTabSize;
     for (uint8_t i = 0; i<TechTabSize; i++) {
-        NCIStartDiscovery[(i*2)+4] = (modeSE == 1 ? DiscoveryTechnologiesRW[i] : DiscoveryTechnologiesCE[i]);
+        NCIStartDiscovery[(i*2)+4] = (
+                modeSE == 1 ? DiscoveryTechnologiesRW[i] : 
+                modeSE == 2 ? DiscoveryTechnologiesCE[i] :
+                DiscoveryTechnologiesP2P[i]
+            );
+
         NCIStartDiscovery[(i*2)+5] = 0x01;
     }
 
@@ -293,11 +335,68 @@ uint8_t Electroniccats_PN7150::StartDiscovery(uint8_t modeSE){
         return SUCCESS;
 }
 
-bool Electroniccats_PN7150::CardModeSend (unsigned char *pData, unsigned char DataSize){
+void Electroniccats_PN7150::ProcessCardMode(RfIntf_t RfIntf) {
+    uint8_t Answer[MAX_NCI_FRAME_SIZE];
+    
+    uint8_t NCIStopDiscovery[] = {0x21, 0x06, 0x01, 0x00};
+    bool FirstCmd = true;
+
+    /* Reset Card emulation state */
+    T4T_NDEF_EMU_Reset();
+   
+    (void) writeData(NCIStartDiscovery, NCIStartDiscovery_length); 
+    getMessage(2000);
+    //NxpNci_WaitForReception(Answer, sizeof(Answer), &AnswerSize, TIMEOUT_2S) == NXPNCI_SUCCESS
+
+    while(rxMessageLength > 0)
+    {
+        /* is RF_DEACTIVATE_NTF ? */
+        if((rxBuffer[0] == 0x61) && (rxBuffer[1] == 0x06))
+        {
+            if(FirstCmd)
+            {
+                /* Restart the discovery loop */
+                //NxpNci_HostTransceive(NCIStopDiscovery, sizeof(NCIStopDiscovery), Answer, sizeof(Answer), &AnswerSize);
+                (void) writeData(NCIStartDiscovery, sizeof(NCIStopDiscovery)); 
+                getMessage();
+                do
+                {
+                    if ((rxBuffer[0] == 0x41) && (rxBuffer[1] == 0x06)) break;
+                    //NxpNci_WaitForReception(Answer, sizeof(Answer), &AnswerSize, TIMEOUT_100MS);
+                    (void) writeData(rxBuffer, rxMessageLength); 
+                    getMessage(100);
+                } while (rxMessageLength != 0);
+                //NxpNci_HostTransceive(NCIStartDiscovery, NCIStartDiscovery_length, Answer, sizeof(Answer), &AnswerSize);
+                (void) writeData(NCIStartDiscovery, NCIStartDiscovery_length); 
+                getMessage();
+            }
+            /* Come back to discovery state */
+            break;
+        }
+        /* is DATA_PACKET ? */
+        else if((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00))
+        {
+            /* DATA_PACKET */
+            uint8_t Cmd[MAX_NCI_FRAME_SIZE];
+            uint16_t CmdSize;
+
+            T4T_NDEF_EMU_Next(&rxBuffer[3], rxBuffer[2], &Cmd[3], (unsigned short *) &CmdSize);
+
+            Cmd[0] = 0x00;
+            Cmd[1] = (CmdSize & 0xFF00) >> 8;
+            Cmd[2] = CmdSize & 0x00FF;
+
+            //NxpNci_HostTransceive(Cmd, CmdSize+3, Answer, sizeof(Answer), &AnswerSize);
+            (void) writeData(Cmd, CmdSize+3); 
+            getMessage();
+        }
+        FirstCmd = false;
+    }
+}
+
+bool Electroniccats_PN7150::CardModeSend (unsigned char *pData, unsigned char DataSize) {
     bool status;
     uint8_t Cmd[MAX_NCI_FRAME_SIZE];
-    uint8_t Ans[MAX_NCI_FRAME_SIZE];
-    uint16_t AnsSize;
 
     /* Compute and send DATA_PACKET */
     Cmd[0] = 0x00;
@@ -311,23 +410,24 @@ bool Electroniccats_PN7150::CardModeSend (unsigned char *pData, unsigned char Da
 bool Electroniccats_PN7150::CardModeReceive (unsigned char *pData, unsigned char *pDataSize) {
     bool status = NFC_ERROR;
     uint8_t Ans[MAX_NCI_FRAME_SIZE];
-    uint16_t AnsSize;
+
     (void) writeData(Ans, sizeof(Ans)); 
-    getMessage();
+    getMessage(2000);
 
     /* Is data packet ? */
     if ((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00)) {
+        Serial.println(rxBuffer[2]);
         *pDataSize = rxBuffer[2];
         memcpy(pData, &rxBuffer[3], *pDataSize);
-        status = SUCCESS;
+        status = NFC_SUCCESS;
     }
     else{
-        return NFC_ERROR;
+        status = NFC_ERROR;
     }
-    return NFC_SUCCESS;
+    return status;
 }
 
-void Electroniccats_PN7150::FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf){
+void Electroniccats_PN7150::FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf) {
     uint8_t i, temp;
 
     switch(pRfIntf->ModeTech){
@@ -389,11 +489,9 @@ void Electroniccats_PN7150::FillInterfaceInfo(RfIntf_t* pRfIntf, uint8_t* pBuf){
     }
 }
 
-bool Electroniccats_PN7150::ReaderTagCmd (unsigned char *pCommand, unsigned char CommandSize, unsigned char *pAnswer, unsigned char *pAnswerSize){
+bool Electroniccats_PN7150::ReaderTagCmd (unsigned char *pCommand, unsigned char CommandSize, unsigned char *pAnswer, unsigned char *pAnswerSize) {
     bool status = ERROR;
     uint8_t Cmd[MAX_NCI_FRAME_SIZE];
-    uint8_t Ans[MAX_NCI_FRAME_SIZE];
-    uint16_t AnsSize;
 
     /* Compute and send DATA_PACKET */
     Cmd[0] = 0x00;
@@ -415,14 +513,18 @@ bool Electroniccats_PN7150::ReaderTagCmd (unsigned char *pCommand, unsigned char
     return status;
 }
 
-bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf){
+bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf) {
     uint8_t NCIRfDiscoverSelect[] = {0x21, 0x04, 0x03, 0x01, PROT_ISODEP, INTF_ISODEP};
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
-    static uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
 
+    //P2P Support
+    uint8_t NCIStopDiscovery[] = {0x21, 0x06, 0x01, 0x00};
+    uint8_t NCIRestartDiscovery[] = {0x21, 0x06, 0x01, 0x03};
+    uint8_t saved_NTF[7];
+
+    gNextTag_Protocol = PROT_UNDETERMINED;
+wait:
     do {
-        getMessage(1331); //Infinite loop, waiting for response
+        getMessage(1337); //Infinite loop, waiting for response
     }while ((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03)));
 
     gNextTag_Protocol = PROT_UNDETERMINED;
@@ -434,6 +536,57 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf){
         pRfIntf->ModeTech = rxBuffer[6];
         pRfIntf->MoreTags = false;
         FillInterfaceInfo(pRfIntf, &rxBuffer[10]);
+
+        //P2P
+        /* Verifying if not a P2P device also presenting T4T emulation */
+        if ((pRfIntf->Interface == INTF_ISODEP) && (pRfIntf->Protocol == PROT_ISODEP) && ((pRfIntf->ModeTech & MODE_LISTEN) != MODE_LISTEN))
+        {
+            memcpy(saved_NTF, rxBuffer, sizeof(saved_NTF));
+            while(1)
+            {
+                /* Restart the discovery loop */ 
+                (void) writeData(NCIRestartDiscovery, sizeof(NCIRestartDiscovery)); 
+                getMessage();
+                getMessage(100);
+                /* Wait for discovery */
+                do {
+                    getMessage(1000); //Infinite loop, waiting for response
+                }while ((rxMessageLength == 4) && (rxBuffer[0] == 0x60) && (rxBuffer[1] == 0x07));
+
+  
+                if ((rxMessageLength != 0) && (rxBuffer[0] == 0x61) && (rxBuffer[1] == 0x05))
+                {
+                    /* Is same device detected ? */
+                    if (memcmp(saved_NTF, rxBuffer, sizeof(saved_NTF)) == 0) break;
+                    /* Is P2P detected ? */
+                    if (rxBuffer[5] == PROT_NFCDEP)
+                    {
+                        pRfIntf->Interface = rxBuffer[4];
+                        pRfIntf->Protocol = rxBuffer[5];
+                        pRfIntf->ModeTech = rxBuffer[6];
+                        pRfIntf->MoreTags = false;
+                        FillInterfaceInfo(pRfIntf, &rxBuffer[10]);
+                        break;
+                    }
+                }
+                else
+                {
+                    if (rxMessageLength != 0)
+                    {
+                        /* Flush any other notification  */
+                        while(rxMessageLength != 0) 
+                            getMessage(100);
+
+                        /* Restart the discovery loop */ 
+                        (void) writeData(NCIRestartDiscovery, sizeof(NCIRestartDiscovery)); 
+                        getMessage();
+                        getMessage(100);
+
+                    }
+                    goto wait;
+                }
+            }
+        }
     }
     else{ /* RF_DISCOVER_NTF */
         pRfIntf->Interface = INTF_UNDETERMINED;
@@ -472,6 +625,19 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf){
                 pRfIntf->ModeTech = rxBuffer[6];
                 FillInterfaceInfo(pRfIntf, &rxBuffer[10]);
             }
+
+            /* In case of P2P target detected but lost, inform application to restart discovery */
+            else if (pRfIntf->Protocol == PROT_NFCDEP){
+                /* Restart the discovery loop */
+                (void) writeData(NCIStopDiscovery, sizeof(NCIStopDiscovery)); 
+                getMessage();
+                getMessage(100);
+
+                (void) writeData(NCIStartDiscovery, NCIStartDiscovery_length); 
+                getMessage();
+
+                goto wait;
+            }
         }
     }
 
@@ -481,17 +647,182 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf){
     return SUCCESS;
 }
 
-void Electroniccats_PN7150::ProcessReaderMode(RfIntf_t RfIntf, RW_Operation_t Operation){
-    switch (Operation) {
-#ifndef NO_NDEF_SUPPORT
-        case READ_NDEF:
-            //Working on it
-            break;
+void Electroniccats_PN7150::ProcessP2pMode(RfIntf_t RfIntf) {
+    uint8_t status = ERROR;
+    bool restart = false;
+    uint8_t NCILlcpSymm[] = {0x00, 0x00, 0x02, 0x00, 0x00};
+    uint8_t NCIRestartDiscovery[] = {0x21, 0x06, 0x01, 0x03};
 
-        case WRITE_NDEF:
-            //Working on it
+    /* Reset P2P_NDEF state */
+    P2P_NDEF_Reset();
+
+    /* Is Initiator mode ? */
+    if((RfIntf.ModeTech & MODE_LISTEN) != MODE_LISTEN)
+    {
+        /* Initiate communication (SYMM PDU) */        
+        (void) writeData(NCILlcpSymm, sizeof(NCILlcpSymm)); 
+        getMessage();
+        
+        /* Save status for discovery restart */
+        restart = true;
+    }
+    status = ERROR; 
+    getMessage(2000);
+    if (rxMessageLength > 0)
+        status = SUCCESS;
+
+    /* Get frame from remote peer */
+    while(status == SUCCESS)
+    {
+        /* is DATA_PACKET ? */
+        if((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00))
+        {
+            uint8_t Cmd[MAX_NCI_FRAME_SIZE];
+            uint16_t CmdSize;
+            /* Handle P2P communication */
+            P2P_NDEF_Next(&rxBuffer[3], rxBuffer[2], &Cmd[3], (unsigned short *) &CmdSize);
+            /* Compute DATA_PACKET to answer */
+            Cmd[0] = 0x00;
+            Cmd[1] = (CmdSize & 0xFF00) >> 8;
+            Cmd[2] = CmdSize & 0x00FF;
+            status = ERROR; 
+            (void) writeData(Cmd, CmdSize+3);
+            getMessage();
+            if (rxMessageLength > 0)
+                status = SUCCESS;
+        }
+        /* is CORE_INTERFACE_ERROR_NTF ?*/
+        else if ((rxBuffer[0] == 0x60) && (rxBuffer[1] == 0x08))
+        {
+            /* Come back to discovery state */
             break;
-#endif
+        }
+        /* is RF_DEACTIVATE_NTF ? */
+        else if((rxBuffer[0] == 0x61) && (rxBuffer[1] == 0x06))
+        {
+            /* Come back to discovery state */
+            break;
+        }
+        /* is RF_DISCOVERY_NTF ? */
+        else if((rxBuffer[0] == 0x61) && ((rxBuffer[1] == 0x05) || (rxBuffer[1] == 0x03)))
+        {
+            do{
+                if((rxBuffer[0] == 0x61) && ((rxBuffer[1] == 0x05) || (rxBuffer[1] == 0x03)))
+                {
+                    if((rxBuffer[6] & MODE_LISTEN) != MODE_LISTEN) restart = true;
+                    else restart = false;
+                }
+                status = ERROR; 
+                (void) writeData(rxBuffer, rxMessageLength);
+                getMessage();
+                if (rxMessageLength > 0)
+                    status = SUCCESS;    
+            }
+            while (rxMessageLength != 0);
+            /* Come back to discovery state */
+            break;
+        }
+
+        /* Wait for next frame from remote P2P, or notification event */
+        status = ERROR; 
+        (void) writeData(rxBuffer, rxMessageLength);
+        getMessage();
+        if (rxMessageLength > 0)
+            status = SUCCESS;   
+    }
+
+    /* Is Initiator mode ? */
+    if(restart)
+    {
+        /* Communication ended, restart discovery loop */
+        (void) writeData(NCIRestartDiscovery, sizeof(NCIRestartDiscovery));
+        getMessage();
+        getMessage(100);
+    }
+}
+
+void Electroniccats_PN7150::ReadNdef(RfIntf_t RfIntf) {
+    uint8_t Cmd[MAX_NCI_FRAME_SIZE];
+    uint16_t CmdSize = 0;
+
+    RW_NDEF_Reset(RfIntf.Protocol);
+
+    while(1)
+    {
+        RW_NDEF_Read_Next(&rxBuffer[3], rxBuffer[2], &Cmd[3], (unsigned short *) &CmdSize);
+        if(CmdSize == 0)
+        {
+            /// End of the Read operation 
+            break;
+        }
+        else
+        {
+            // Compute and send DATA_PACKET 
+            Cmd[0] = 0x00;
+            Cmd[1] = (CmdSize & 0xFF00) >> 8;
+            Cmd[2] = CmdSize & 0x00FF;
+
+            (void) writeData(Cmd, CmdSize+3); 
+            getMessage();
+            getMessage(1000);
+            
+            // Manage chaining in case of T4T 
+            if((RfIntf.Interface = INTF_ISODEP) && rxBuffer[0] == 0x10)
+            {
+                uint8_t tmp[MAX_NCI_FRAME_SIZE];
+                uint8_t tmpSize = 0;
+                while(rxBuffer[0] == 0x10)
+                {
+                    memcpy(&tmp[tmpSize], &rxBuffer[3], rxBuffer[2]);
+                    tmpSize += rxBuffer[2];
+                    getMessage(100);
+                }
+                memcpy(&tmp[tmpSize], &rxBuffer[3], rxBuffer[2]);
+                tmpSize += rxBuffer[2];
+                //* Compute all chained frame into one unique answer 
+                memcpy(&rxBuffer[3], tmp, tmpSize);
+                rxBuffer[2] = tmpSize;
+            }
+        }
+    }
+}
+
+void Electroniccats_PN7150::WriteNdef(RfIntf_t RfIntf) {
+
+    uint8_t Cmd[MAX_NCI_FRAME_SIZE];
+    uint16_t CmdSize = 0;
+
+    RW_NDEF_Reset(RfIntf.Protocol);
+
+    while(1){
+        RW_NDEF_Write_Next(&rxBuffer[3], rxBuffer[2], &Cmd[3], (unsigned short *) &CmdSize);
+        if(CmdSize == 0)
+        {
+            // End of the Write operation 
+            break;
+        }
+        else
+        {
+            // Compute and send DATA_PACKET 
+            Cmd[0] = 0x00;
+            Cmd[1] = (CmdSize & 0xFF00) >> 8;
+            Cmd[2] = CmdSize & 0x00FF;
+
+            (void) writeData(Cmd, CmdSize+3); 
+            getMessage();
+            getMessage(2000);
+        }
+    }
+}
+
+void Electroniccats_PN7150::ProcessReaderMode(RfIntf_t RfIntf, RW_Operation_t Operation) {
+    switch (Operation) {
+        case READ_NDEF:
+            ReadNdef(RfIntf);
+            break;
+        case WRITE_NDEF:
+            WriteNdef(RfIntf);
+            break;
         case PRESENCE_CHECK:
             PresenceCheck(RfIntf);
             break;
@@ -500,12 +831,9 @@ void Electroniccats_PN7150::ProcessReaderMode(RfIntf_t RfIntf, RW_Operation_t Op
     }
 }
 
-
 void Electroniccats_PN7150::PresenceCheck(RfIntf_t RfIntf){
     bool status;
     uint8_t i;
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
 
     uint8_t NCIPresCheckT1T[] = {0x00, 0x00, 0x07, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t NCIPresCheckT2T[] = {0x00, 0x00, 0x02, 0x30, 0x00};
@@ -585,13 +913,9 @@ void Electroniccats_PN7150::PresenceCheck(RfIntf_t RfIntf){
     }
 }
 
-
-
-bool Electroniccats_PN7150::ReaderReActivate(RfIntf_t *pRfIntf){
+bool Electroniccats_PN7150::ReaderReActivate(RfIntf_t *pRfIntf) {
     uint8_t NCIDeactivate[] = {0x21, 0x06, 0x01, 0x01};
     uint8_t NCIActivate[] = {0x21, 0x04, 0x03, 0x01, 0x00, 0x00};
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
 
     /* First de-activate the target */
     (void) writeData(NCIDeactivate, sizeof(NCIDeactivate)); 
@@ -610,12 +934,10 @@ bool Electroniccats_PN7150::ReaderReActivate(RfIntf_t *pRfIntf){
     return SUCCESS;
 }
 
-
-bool Electroniccats_PN7150::ReaderActivateNext(RfIntf_t *pRfIntf){
+bool Electroniccats_PN7150::ReaderActivateNext(RfIntf_t *pRfIntf) {
     uint8_t NCIStopDiscovery[] = {0x21, 0x06, 0x01, 0x01};
     uint8_t NCIRfDiscoverSelect[] = {0x21, 0x04, 0x03, 0x02, PROT_ISODEP, INTF_ISODEP};
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
+
     bool status = ERROR;
 
     pRfIntf->MoreTags = false;
@@ -650,7 +972,7 @@ bool Electroniccats_PN7150::ReaderActivateNext(RfIntf_t *pRfIntf){
             pRfIntf->Interface = rxBuffer[4];
             pRfIntf->Protocol = rxBuffer[5];
             pRfIntf->ModeTech = rxBuffer[6];
-            FillInterfaceInfo(pRfIntf, &Answer[10]);
+            FillInterfaceInfo(pRfIntf, &rxBuffer[10]);
             status = SUCCESS;
         }
     }
@@ -658,10 +980,8 @@ bool Electroniccats_PN7150::ReaderActivateNext(RfIntf_t *pRfIntf){
     return status;
 }
 
-bool Electroniccats_PN7150::StopDiscovery(void){
+bool Electroniccats_PN7150::StopDiscovery(void) {
     uint8_t NCIStopDiscovery[] = {0x21, 0x06, 0x01, 0x00};
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
 
     (void) writeData(NCIStopDiscovery, sizeof(NCIStopDiscovery)); 
     getMessage();
@@ -670,8 +990,7 @@ bool Electroniccats_PN7150::StopDiscovery(void){
     return SUCCESS;
 }
 
-bool Electroniccats_PN7150::ConfigureSettings(void)
-{
+bool Electroniccats_PN7150::ConfigureSettings(void) {
 
 #if NXP_CORE_CONF
 /* NCI standard dedicated settings
@@ -774,8 +1093,6 @@ uint8_t NxpNci_RF_CONF_2ndGen[]={0x20, 0x02, 0x94, 0x11,
   #endif
 #endif
 
-    //uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    //uint16_t AnswerSize;
     uint8_t NCICoreReset[] = {0x20, 0x00, 0x01, 0x00};
     uint8_t NCICoreInit[] = {0x20, 0x01, 0x00};
     bool gRfSettingsRestored_flag = false;
@@ -796,8 +1113,6 @@ uint8_t NxpNci_RF_CONF_2ndGen[]={0x20, 0x02, 0x94, 0x11,
     if (sizeof(NxpNci_CORE_CONF) != 0)
     {
         isResetRequired = true;
-        //NxpNci_HostTransceive(NxpNci_CORE_CONF, sizeof(NxpNci_CORE_CONF), Answer, sizeof(Answer), &AnswerSize);
-        //if ((Answer[0] != 0x40) || (Answer[1] != 0x02) || (Answer[3] != 0x00) || (Answer[4] != 0x00)) return NXPNCI_ERROR;
         (void) writeData(NxpNci_CORE_CONF, sizeof(NxpNci_CORE_CONF));
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
@@ -827,7 +1142,6 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
 #if (NXP_CORE_CONF_EXTN | NXP_CLK_CONF | NXP_TVDD_CONF | NXP_RF_CONF)
     /* First read timestamp stored in NFC Controller */
     if(gNfcController_generation == 1) NCIReadTS[5] = 0x0F;
-    //NxpNci_HostTransceive(NCIReadTS, sizeof(NCIReadTS), Answer, sizeof(Answer), &AnswerSize);
     (void) writeData(NCIReadTS, sizeof(NCIReadTS)); 
     getMessage();
     if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x03) || (rxBuffer[3] != 0x00)) 
@@ -901,7 +1215,6 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         /* Store curent timestamp to NFC Controller memory for further checks */
         if(gNfcController_generation == 1) NCIWriteTS[5] = 0x0F;
         memcpy(&NCIWriteTS[7], currentTS, sizeof(currentTS));
-        //NxpNci_HostTransceive(NCIWriteTS, sizeof(NCIWriteTS), Answer, sizeof(Answer), &AnswerSize);
         (void) writeData(NCIWriteTS, sizeof(NCIWriteTS)); 
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
@@ -915,7 +1228,6 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
     if(isResetRequired)
     {
         /* Reset the NFC Controller to insure new settings apply */
-        //NxpNci_HostTransceive(NCICoreReset, sizeof(NCICoreReset), Answer, sizeof(Answer), &AnswerSize);
         (void) writeData(NCICoreReset, sizeof(NCICoreReset)); 
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x00) || (rxBuffer[3] != 0x00)) 
@@ -935,14 +1247,11 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
     return SUCCESS;
 }
 
-bool Electroniccats_PN7150::NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate)
-{
+bool Electroniccats_PN7150::NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate) {
 	uint8_t NCIPrbs_1stGen[] = {0x2F, 0x30, 0x04, 0x00, 0x00, 0x01, 0x01};
 	uint8_t NCIPrbs_2ndGen[] = {0x2F, 0x30, 0x06, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01};
     uint8_t *NxpNci_cmd;
     uint16_t NxpNci_cmd_size = 0;
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
 
     if(gNfcController_generation == 1)
     {
@@ -973,11 +1282,8 @@ bool Electroniccats_PN7150::NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpN
     return SUCCESS;
 }
 
-bool Electroniccats_PN7150::NxpNci_FactoryTest_RfOn(void)
-{
+bool Electroniccats_PN7150::NxpNci_FactoryTest_RfOn(void) {
 	uint8_t NCIRfOn[] = {0x2F, 0x3D, 0x02, 0x20, 0x01};
-    uint8_t Answer[MAX_NCI_FRAME_SIZE];
-    uint16_t AnswerSize;
 
     (void) writeData(NCIRfOn, sizeof(NCIRfOn)); 
     getMessage();

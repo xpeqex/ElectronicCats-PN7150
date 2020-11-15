@@ -2,11 +2,11 @@
 #define Electroniccats_PN7150_H
 /**
  * NXP PN7150 Driver
- * Authors: 
+ * Porting uthors: 
  *        Salvador Mendoza - @Netxing - salmg.net
  *        Andres Sabas - Electronic Cats - Electroniccats.com
  *
- *  March 2020
+ *  November 2020
  * 
  * This code is beerware; if you see me (or any other collaborator 
  * member) at the local, and you've found our code helpful, 
@@ -20,6 +20,9 @@
 
 #include <Arduino.h>                          // Gives us access to all typical Arduino types and functions
                                               // The HW interface between The PN7150 and the DeviceHost is I2C, so we need the I2C library.library
+//#include "RW_NDEF.h"
+#include "P2P_NDEF.h"
+
 #if defined(TEENSYDUINO) && defined(KINETISK) // Teensy 3.0, 3.1, 3.2, 3.5, 3.6 :  Special, more optimized I2C library for Teensy boards
 #include <i2c_t3.h>                           // Credits Brian "nox771" : see https://forum.pjrc.com/threads/21680-New-I2C-library-for-Teensy3
 #else
@@ -196,6 +199,7 @@ typedef enum
     PRESENCE_CHECK
 } RW_Operation_t;
 
+
 class Electroniccats_PN7150{
 	private:
 		uint8_t  _IRQpin, _VENpin, _I2Caddress;
@@ -233,6 +237,10 @@ class Electroniccats_PN7150{
         bool ConfigureSettings(void);
         bool NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate);
         bool NxpNci_FactoryTest_RfOn(void);
+        void ProcessP2pMode(RfIntf_t RfIntf);
+        void ReadNdef(RfIntf_t RfIntf);
+        void WriteNdef(RfIntf_t RfIntf);
+        void ProcessCardMode(RfIntf_t RfIntf);
 };
 
 #endif
