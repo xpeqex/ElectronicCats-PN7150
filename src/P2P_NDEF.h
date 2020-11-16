@@ -11,6 +11,9 @@
 * copyright or trademark. NXP must not be liable for any loss or damage
 *                          arising from its use.
 */
+#ifndef _P2P_NDEF_H_
+#define _P2P_NDEF_H_
+
 #include <Arduino.h>
 
 #define P2P_NDEF_MAX_NDEF_MESSAGE_SIZE 240
@@ -18,3 +21,5 @@
 void P2P_NDEF_Reset(void);
 void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
 //void Sleep (unsigned int ms);
+
+#endif
