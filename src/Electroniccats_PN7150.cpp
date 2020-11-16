@@ -21,6 +21,7 @@
 #include "RW_NDEF.h"
 #include "T4T_NDEF_emu.h"
 
+
 uint8_t gNextTag_Protocol = PROT_UNDETERMINED;
 
 uint8_t NCIStartDiscovery_length = 0;

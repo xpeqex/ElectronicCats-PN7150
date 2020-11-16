@@ -11,9 +11,6 @@
 * copyright or trademark. NXP must not be liable for any loss or damage
 *                          arising from its use.
 */
-#ifndef _RW_NDEF_H_
-#define _RW_NDEF_H_
-
 #include <Arduino.h>
 
 #define RW_MAX_NDEF_FILE_SIZE 500
@@ -37,5 +34,3 @@ extern RW_NDEF_Callback_t *pRW_NDEF_PushCb;
 void RW_NDEF_Reset(unsigned char type);
 void RW_NDEF_Read_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
 void RW_NDEF_Write_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
-
-#endif

@@ -12,10 +12,10 @@
 *                          arising from its use.
 */
 
-#ifdef CARDEMU_SUPPORT
-#ifndef NO_NDEF_SUPPORT
-#include <tool.h>
-#include <T4T_NDEF_emu.h>
+//#ifdef CARDEMU_SUPPORT
+//#ifndef NO_NDEF_SUPPORT
+#include "tool.h"
+#include "T4T_NDEF_emu.h"
 
 const unsigned char T4T_NDEF_EMU_APP_Select[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01, 0x00};
 const unsigned char T4T_NDEF_EMU_CC[] = {0x00, 0x0F, 0x20, 0x00, 0xFF, 0x00, 0xFF, 0x04, 0x06, 0xE1, 0x04, 0x00, 0xFF, 0x00, 0x00};
@@ -168,5 +168,5 @@ void T4T_NDEF_EMU_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned ch
         T4T_NDEF_EMU_Reset();
     }
 }
-#endif
-#endif
+//#endif
+//#endif

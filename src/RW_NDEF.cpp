@@ -14,7 +14,6 @@
 
 //#ifdef RW_SUPPORT
 //#ifndef NO_NDEF_SUPPORT
-
 #include "RW_NDEF.h"
 #include "RW_NDEF_T1T.h"
 #include "RW_NDEF_T2T.h"

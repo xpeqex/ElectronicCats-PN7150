@@ -12,10 +12,10 @@
 *                          arising from its use.
 */
 
-#ifdef RW_SUPPORT
-#ifndef NO_NDEF_SUPPORT
-#include <tool.h>
-#include <RW_NDEF.h>
+//#ifdef RW_SUPPORT
+//#ifndef NO_NDEF_SUPPORT
+#include "tool.h"
+#include "RW_NDEF.h"
 
 #define T3T_MAGIC_NUMBER    0xE1
 #define T3T_NDEF_TLV        0x03
@@ -121,5 +121,5 @@ void RW_NDEF_T3T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
         break;
     }
 }
-#endif
-#endif
+//#endif
+//#endif

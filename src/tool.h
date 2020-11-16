@@ -13,13 +13,13 @@
 */
 
 //#include <Arduino.h>
-/*
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 
-#define PRINTF printf
-*/
+//#define PRINTF printf
+
 extern void Sleep (unsigned int ms);

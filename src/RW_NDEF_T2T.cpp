@@ -12,10 +12,10 @@
 *                          arising from its use.
 */
 
-#ifdef RW_SUPPORT
-#ifndef NO_NDEF_SUPPORT
-#include <tool.h>
-#include <RW_NDEF.h>
+//#ifdef RW_SUPPORT
+//#ifndef NO_NDEF_SUPPORT
+#include "tool.h"
+#include "RW_NDEF.h"
 
 /* TODO: No support for tag larger than 1024 bytes (requiring SECTOR_SELECT command use) */
 
@@ -230,5 +230,5 @@ void RW_NDEF_T2T_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, unsign
         break;
     }
 }
-#endif
-#endif
+//#endif
+//#endif

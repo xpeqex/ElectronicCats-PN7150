@@ -12,10 +12,10 @@
 *                          arising from its use.
 */
 
-#ifdef RW_SUPPORT
-#ifndef NO_NDEF_SUPPORT
-#include <tool.h>
-#include <RW_NDEF.h>
+//#ifdef RW_SUPPORT
+//#ifndef NO_NDEF_SUPPORT
+#include "tool.h"
+#include "RW_NDEF.h"
 
 /*
     TODO: Only simplified scenario is implemented yet:
@@ -356,5 +356,5 @@ void RW_NDEF_MIFARE_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, uns
         break;
     }
 }
-#endif
-#endif
+//#endif
+//#endif

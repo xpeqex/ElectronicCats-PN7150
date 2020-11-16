@@ -11,11 +11,7 @@
 * copyright or trademark. NXP must not be liable for any loss or damage
 *                          arising from its use.
 */
-#ifndef _RW_NDEF_MIFARE_H_
-#define _RW_NDEF_MIFARE_H_
 
 void RW_NDEF_MIFARE_Reset(void);
 void RW_NDEF_MIFARE_Read_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
 void RW_NDEF_MIFARE_Write_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
-
-#endif

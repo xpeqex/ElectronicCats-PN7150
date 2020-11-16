@@ -12,10 +12,10 @@
 *                          arising from its use.
 */
 
-#ifdef RW_SUPPORT
-#ifndef NO_NDEF_SUPPORT
-#include <tool.h>
-#include <RW_NDEF.h>
+//#ifdef RW_SUPPORT
+//#ifndef NO_NDEF_SUPPORT
+#include "tool.h"
+#include "RW_NDEF.h"
 
 const unsigned char RW_NDEF_T4T_APP_Select20[] = {0x00,0xA4,0x04,0x00,0x07,0xD2,0x76,0x00,0x00,0x85,0x01,0x01,0x00};
 const unsigned char RW_NDEF_T4T_APP_Select10[] = {0x00,0xA4,0x04,0x00,0x07,0xD2,0x76,0x00,0x00,0x85,0x01,0x00};
@@ -357,5 +357,5 @@ void RW_NDEF_T4T_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, unsign
     }
 }
 
-#endif
-#endif
+//#endif
+//#endif
