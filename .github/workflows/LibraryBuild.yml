@@ -63,4 +63,4 @@ jobs:
         with:
           arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
           platform-url: ${{ matrix.platform-url }}
-          sketches-exclude: ${{ matrix.examples-exclude }}
+          sketches-exclude: ${{ matrix.sketches-exclude }}
