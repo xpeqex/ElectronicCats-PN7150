@@ -39,7 +39,7 @@ jobs:
         #############################################################################################################
         include:
           - arduino-boards-fqbn: arduino:avr:uno
-            examples-exclude: MifareClassic_write_block,DetectTags,MifareClassic_read_block
+            sketches-exclude: MifareClassic_write_block,DetectTags,MifareClassic_read_block
 
           - arduino-boards-fqbn: arduino:avr:leonardo
           
@@ -56,11 +56,11 @@ jobs:
 
       # First of all, we clone the repo using the `checkout` action.
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
 
       - name: Compile all examples
-        uses: ArminJo/arduino-test-compile@master
+        uses: ArminJo/arduino-test-compile@v3
         with:
           arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
           platform-url: ${{ matrix.platform-url }}
-          examples-exclude: ${{ matrix.examples-exclude }}
+          sketches-exclude: ${{ matrix.examples-exclude }}
