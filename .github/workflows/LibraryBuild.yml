@@ -39,6 +39,7 @@ jobs:
         #############################################################################################################
         include:
           - arduino-boards-fqbn: arduino:avr:uno
+            examples-exclude: MifareClassic_write_block
 
           - arduino-boards-fqbn: arduino:avr:leonardo
           
