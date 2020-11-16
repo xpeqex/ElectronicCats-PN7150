@@ -39,7 +39,7 @@ jobs:
         #############################################################################################################
         include:
           - arduino-boards-fqbn: arduino:avr:uno
-            examples-exclude: MifareClassic_write_block, Compiling DetectTags, MifareClassic_read_block
+            examples-exclude: MifareClassic_write_block,DetectTags,MifareClassic_read_block
 
           - arduino-boards-fqbn: arduino:avr:leonardo
           
