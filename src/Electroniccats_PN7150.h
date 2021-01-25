@@ -199,6 +199,54 @@ typedef enum
     PRESENCE_CHECK
 } RW_Operation_t;
 
+/*
+ * Definition of discovered remote device properties information
+ */
+/* POLL passive type A */
+typedef struct
+{
+    unsigned char SensRes[2];
+    unsigned char NfcIdLen;
+    unsigned char NfcId[10];
+    unsigned char SelResLen;
+    unsigned char SelRes[1];
+    unsigned char RatsLen;
+    unsigned char Rats[20];
+} NxpNci_RfIntf_info_APP_t;
+
+/* POLL passive type B */
+typedef struct
+{
+    unsigned char SensResLen;
+    unsigned char SensRes[12];
+    unsigned char AttribResLen;
+    unsigned char AttribRes[17];
+} NxpNci_RfIntf_info_BPP_t;
+
+/* POLL passive type F */
+typedef struct
+{
+    unsigned char BitRate;
+    unsigned char SensResLen;
+    unsigned char SensRes[18];
+} NxpNci_RfIntf_info_FPP_t;
+
+/* POLL passive type ISO15693 */
+typedef struct
+{
+    unsigned char AFI;
+    unsigned char DSFID;
+    unsigned char ID[8];
+} NxpNci_RfIntf_info_VPP_t;
+
+typedef union
+{
+    NxpNci_RfIntf_info_APP_t NFC_APP;
+    NxpNci_RfIntf_info_BPP_t NFC_BPP;
+    NxpNci_RfIntf_info_FPP_t NFC_FPP;
+    NxpNci_RfIntf_info_VPP_t NFC_VPP;
+} NxpNci_RfIntf_Info_t;
+
 
 class Electroniccats_PN7150{
 	private:
@@ -235,6 +283,8 @@ class Electroniccats_PN7150{
 		void PrintBuf(const byte * data, const uint32_t numBytes);
 		bool ReaderActivateNext(RfIntf_t *pRfIntf);	
         bool ConfigureSettings(void);
+        void NdefPull_Cb(unsigned char *pNdefMessage, unsigned short NdefMessageSize);
+        void NdefPush_Cb(unsigned char *pNdefRecord, unsigned short NdefRecordSize);
         bool NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate);
         bool NxpNci_FactoryTest_RfOn(void);
         void ProcessP2pMode(RfIntf_t RfIntf);

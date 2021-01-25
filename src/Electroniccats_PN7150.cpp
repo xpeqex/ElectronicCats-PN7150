@@ -189,11 +189,12 @@ uint8_t Electroniccats_PN7150::connectNCI() {
     gNfcController_fw_version[0] = rxBuffer[17+rxBuffer[8]]; //0xROM_CODE_V
     gNfcController_fw_version[1] = rxBuffer[18+rxBuffer[8]]; //0xFW_MAJOR_NO
     gNfcController_fw_version[2] = rxBuffer[19+rxBuffer[8]]; //0xFW_MINOR_NO
+    #ifdef SerialUSB
     Serial.println("0xROM_CODE_V: " + String(gNfcController_fw_version[0], HEX));
     Serial.println("FW_MAJOR_NO: " + String(gNfcController_fw_version[1], HEX));
     Serial.println("0xFW_MINOR_NO: " + String(gNfcController_fw_version[2], HEX));
     Serial.println("gNfcController_generation: " + String(gNfcController_generation, HEX));
-
+    #endif
     return SUCCESS;
 }
 
@@ -417,7 +418,9 @@ bool Electroniccats_PN7150::CardModeReceive (unsigned char *pData, unsigned char
 
     /* Is data packet ? */
     if ((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00)) {
+        #ifdef SerialUSB
         Serial.println(rxBuffer[2]);
+        #endif
         *pDataSize = rxBuffer[2];
         memcpy(pData, &rxBuffer[3], *pDataSize);
         status = NFC_SUCCESS;
@@ -1118,7 +1121,9 @@ uint8_t NxpNci_RF_CONF_2ndGen[]={0x20, 0x02, 0x94, 0x11,
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
           {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CORE_CONF");
+              #endif
               return ERROR;
           }
     }
@@ -1132,7 +1137,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
 		if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x00) || (rxBuffer[3] != 0x00)) 
         {
+          #ifdef SerialUSB
           Serial.println("NxpNci_CORE_STANDBY");
+          #endif
           return ERROR;
         }
 	}
@@ -1147,7 +1154,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
     getMessage();
     if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x03) || (rxBuffer[3] != 0x00)) 
     {
+        #ifdef SerialUSB
         Serial.println("read timestamp ");
+        #endif
         return ERROR;
     }
     /* Then compare with current build timestamp, and check RF setting restauration flag */
@@ -1166,7 +1175,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
           {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CORE_CONF_EXTN");
+              #endif
               return ERROR;
           }
 	}
@@ -1182,7 +1193,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
             //NxpNci_HostTransceive(NxpNci_CLK_CONF, sizeof(NxpNci_CLK_CONF), Answer, sizeof(Answer), &AnswerSize);
             if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
             {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CLK_CONF");
+              #endif
               return ERROR;
             } 
         }
@@ -1195,8 +1208,12 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         (void) writeData(NxpNci_TVDD_CONF_2ndGen, sizeof(NxpNci_TVDD_CONF_2ndGen));
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
-          {Serial.println("NxpNci_CONF_size");
-          return ERROR;}
+          {
+              #ifdef SerialUSB
+              Serial.println("NxpNci_CONF_size");
+              #endif
+              return ERROR;
+          }
 	}
 #endif
 
@@ -1208,7 +1225,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
           {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CONF_size");
+              #endif
               return ERROR;
           }
 	}
@@ -1220,7 +1239,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
         {
+            #ifdef SerialUSB
             Serial.println("NFC Controller memory");
+            #endif
             return ERROR;
         }
     //}
@@ -1233,7 +1254,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x00) || (rxBuffer[3] != 0x00)) 
         {
+            #ifdef SerialUSB
             Serial.println("insure new settings apply");
+            #endif
             return ERROR;
         }
 
@@ -1241,12 +1264,157 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x01) || (rxBuffer[3] != 0x00)) 
         {
+        #ifdef SerialUSB
         Serial.println("insure new settings apply 2");
+        #endif
         return ERROR;
         }
     }
     return SUCCESS;
 }
+
+//#if defined P2P_SUPPORT || defined RW_SUPPORT
+void Electroniccats_PN7150::NdefPull_Cb(unsigned char *pNdefMessage, unsigned short NdefMessageSize)
+{
+    unsigned char *pNdefRecord = pNdefMessage;
+    NdefRecord_t NdefRecord;
+    unsigned char save;
+
+    if (pNdefMessage == NULL)
+    {
+        Serial.println("--- Provisioned buffer size too small or NDEF message empty");
+        return;
+    }
+
+    while (pNdefRecord != NULL)
+    {
+        Serial.println("--- NDEF record received:");
+
+        NdefRecord = DetectNdefRecordType(pNdefRecord);
+
+        switch(NdefRecord.recordType)
+        {
+        case MEDIA_VCARD:
+            {
+                save = NdefRecord.recordPayload[NdefRecord.recordPayloadSize];
+                NdefRecord.recordPayload[NdefRecord.recordPayloadSize] = '\0';
+                Serial.print("vCard:");
+                //Serial.println(NdefRecord.recordPayload);
+                NdefRecord.recordPayload[NdefRecord.recordPayloadSize] = save;
+            }
+            break;
+
+        case WELL_KNOWN_SIMPLE_TEXT:
+            {
+                save = NdefRecord.recordPayload[NdefRecord.recordPayloadSize];
+                NdefRecord.recordPayload[NdefRecord.recordPayloadSize] = '\0';
+                Serial.print("Text record:"); 
+                //Serial.println(&NdefRecord.recordPayload[NdefRecord.recordPayload[0]+1]);
+                NdefRecord.recordPayload[NdefRecord.recordPayloadSize] = save;
+            }
+            break;
+
+        case WELL_KNOWN_SIMPLE_URI:
+            {
+                save = NdefRecord.recordPayload[NdefRecord.recordPayloadSize];
+                NdefRecord.recordPayload[NdefRecord.recordPayloadSize] = '\0';
+                Serial.print("URI record: "); 
+                //Serial.println(ndef_helper_UriHead(NdefRecord.recordPayload[0]), &NdefRecord.recordPayload[1]);
+                NdefRecord.recordPayload[NdefRecord.recordPayloadSize] = save;
+            }
+            break;
+
+        case MEDIA_HANDOVER_WIFI:
+            {
+                unsigned char index = 0, i;
+
+                Serial.println ("--- Received WIFI credentials:");
+                if ((NdefRecord.recordPayload[index] == 0x10) && (NdefRecord.recordPayload[index+1] == 0x0e)) index+= 4;
+                while(index < NdefRecord.recordPayloadSize)
+                {
+                    if (NdefRecord.recordPayload[index] == 0x10)
+                    {
+                        if (NdefRecord.recordPayload[index+1] == 0x45) {
+                            Serial.print("- SSID = "); 
+                            for(i=0;i<NdefRecord.recordPayload[index+3];i++) 
+                        Serial.print(NdefRecord.recordPayload[index+4+i]); 
+                        Serial.println ("");
+                        }
+                        else if (NdefRecord.recordPayload[index+1] == 0x03) {
+                          Serial.print("- Authenticate Type = ");
+                          Serial.println(ndef_helper_WifiAuth(NdefRecord.recordPayload[index+5]));
+                        }
+                        else if (NdefRecord.recordPayload[index+1] == 0x0f) 
+                        {
+                            Serial.print("- Encryption Type = "); 
+                            Serial.println(ndef_helper_WifiEnc(NdefRecord.recordPayload[index+5]));
+                        }
+                        else if (NdefRecord.recordPayload[index+1] == 0x27) {
+                            Serial.print("- Network key = "); 
+                            for(i=0;i<NdefRecord.recordPayload[index+3];i++) 
+                            Serial.print("#"); 
+                            Serial.println("");
+                            }
+                        index += 4 + NdefRecord.recordPayload[index+3];
+                    }
+                    else continue;
+                }
+            }
+            break;
+
+        case WELL_KNOWN_HANDOVER_SELECT:
+            Serial.print("Handover select version "); 
+            Serial.print(NdefRecord.recordPayload[0] >> 4); 
+            Serial.println(NdefRecord.recordPayload[0] & 0xF);
+            break;
+
+        case WELL_KNOWN_HANDOVER_REQUEST:
+            Serial.print("Handover request version "); 
+            Serial.print(NdefRecord.recordPayload[0] >> 4); 
+            Serial.println(NdefRecord.recordPayload[0] & 0xF);
+            break;
+
+        case MEDIA_HANDOVER_BT:
+            Serial.print("BT Handover payload = ");
+            //Serial.print(NdefRecord.recordPayload);
+            //Serial.println(NdefRecord.recordPayloadSize);
+            break;
+
+        case MEDIA_HANDOVER_BLE:
+            Serial.print("BLE Handover payload = "); 
+            //Serial.print(NdefRecord.recordPayload); 
+            //Serial.println(NdefRecord.recordPayloadSize);
+            break;
+
+        case MEDIA_HANDOVER_BLE_SECURE:
+            Serial.print("   BLE secure Handover payload = "); 
+            //Serial.println(NdefRecord.recordPayload, NdefRecord.recordPayloadSize);
+            break;
+
+        default:
+            Serial.println("Unsupported NDEF record, cannot parse");
+            break;
+        }
+        pNdefRecord = GetNextRecord(pNdefRecord);
+    }
+
+    Serial.println("");
+}
+//#endif // if defined P2P_SUPPORT || defined RW_SUPPORT
+
+//#if defined P2P_SUPPORT || defined CARDEMU_SUPPORT
+const char NDEF_MESSAGE[] = { 0xD1,   // MB/ME/CF/1/IL/TNF
+        0x01,   // TYPE LENGTH
+        0x07,   // PAYLOAD LENTGH
+        'T',    // TYPE
+        0x02,   // Status
+        'e', 'n', // Language
+        'T', 'e', 's', 't' };
+
+void Electroniccats_PN7150::NdefPush_Cb(unsigned char *pNdefRecord, unsigned short NdefRecordSize) {
+    Serial.println("--- NDEF Record sent");
+}
+//#endif // if defined P2P_SUPPORT || defined CARDEMU_SUPPORT
 
 bool Electroniccats_PN7150::NxpNci_FactoryTest_Prbs(NxpNci_TechType_t type, NxpNci_Bitrate_t bitrate) {
 	uint8_t NCIPrbs_1stGen[] = {0x2F, 0x30, 0x04, 0x00, 0x00, 0x01, 0x01};
