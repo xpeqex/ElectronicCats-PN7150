@@ -189,11 +189,12 @@ uint8_t Electroniccats_PN7150::connectNCI() {
     gNfcController_fw_version[0] = rxBuffer[17+rxBuffer[8]]; //0xROM_CODE_V
     gNfcController_fw_version[1] = rxBuffer[18+rxBuffer[8]]; //0xFW_MAJOR_NO
     gNfcController_fw_version[2] = rxBuffer[19+rxBuffer[8]]; //0xFW_MINOR_NO
+    #ifdef SerialUSB
     Serial.println("0xROM_CODE_V: " + String(gNfcController_fw_version[0], HEX));
     Serial.println("FW_MAJOR_NO: " + String(gNfcController_fw_version[1], HEX));
     Serial.println("0xFW_MINOR_NO: " + String(gNfcController_fw_version[2], HEX));
     Serial.println("gNfcController_generation: " + String(gNfcController_generation, HEX));
-
+    #endif
     return SUCCESS;
 }
 
@@ -417,7 +418,9 @@ bool Electroniccats_PN7150::CardModeReceive (unsigned char *pData, unsigned char
 
     /* Is data packet ? */
     if ((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00)) {
+        #ifdef SerialUSB
         Serial.println(rxBuffer[2]);
+        #endif
         *pDataSize = rxBuffer[2];
         memcpy(pData, &rxBuffer[3], *pDataSize);
         status = NFC_SUCCESS;
@@ -1118,7 +1121,9 @@ uint8_t NxpNci_RF_CONF_2ndGen[]={0x20, 0x02, 0x94, 0x11,
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
           {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CORE_CONF");
+              #endif
               return ERROR;
           }
     }
@@ -1132,7 +1137,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
 		if ((rxBuffer[0] != 0x4F) || (rxBuffer[1] != 0x00) || (rxBuffer[3] != 0x00)) 
         {
+          #ifdef SerialUSB
           Serial.println("NxpNci_CORE_STANDBY");
+          #endif
           return ERROR;
         }
 	}
@@ -1147,7 +1154,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
     getMessage();
     if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x03) || (rxBuffer[3] != 0x00)) 
     {
+        #ifdef SerialUSB
         Serial.println("read timestamp ");
+        #endif
         return ERROR;
     }
     /* Then compare with current build timestamp, and check RF setting restauration flag */
@@ -1166,7 +1175,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
           {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CORE_CONF_EXTN");
+              #endif
               return ERROR;
           }
 	}
@@ -1182,7 +1193,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
             //NxpNci_HostTransceive(NxpNci_CLK_CONF, sizeof(NxpNci_CLK_CONF), Answer, sizeof(Answer), &AnswerSize);
             if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
             {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CLK_CONF");
+              #endif
               return ERROR;
             } 
         }
@@ -1195,8 +1208,12 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         (void) writeData(NxpNci_TVDD_CONF_2ndGen, sizeof(NxpNci_TVDD_CONF_2ndGen));
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
-          {Serial.println("NxpNci_CONF_size");
-          return ERROR;}
+          {
+              #ifdef SerialUSB
+              Serial.println("NxpNci_CONF_size");
+              #endif
+              return ERROR;
+          }
 	}
 #endif
 
@@ -1208,7 +1225,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
 		if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
           {
+              #ifdef SerialUSB
               Serial.println("NxpNci_CONF_size");
+              #endif
               return ERROR;
           }
 	}
@@ -1220,7 +1239,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00)) 
         {
+            #ifdef SerialUSB
             Serial.println("NFC Controller memory");
+            #endif
             return ERROR;
         }
     //}
@@ -1233,7 +1254,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x00) || (rxBuffer[3] != 0x00)) 
         {
+            #ifdef SerialUSB
             Serial.println("insure new settings apply");
+            #endif
             return ERROR;
         }
 
@@ -1241,7 +1264,9 @@ if (sizeof(NxpNci_CORE_STANDBY) != 0)
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x01) || (rxBuffer[3] != 0x00)) 
         {
+        #ifdef SerialUSB
         Serial.println("insure new settings apply 2");
+        #endif
         return ERROR;
         }
     }
