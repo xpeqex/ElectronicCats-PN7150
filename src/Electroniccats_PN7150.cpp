@@ -165,7 +165,7 @@ uint8_t Electroniccats_PN7150::wakeupNCI()
     if (NbBytes != 0)
     {
         //NCI_PRINT_BUF("NCI << ", Answer, NbBytes);
-        /* Is CORE_GENERIC_ERROR_NTF ? */
+        // Is CORE_GENERIC_ERROR_NTF ?
         if ((rxBuffer[0] == 0x60) && (rxBuffer[1] == 0x07))
         {
             /* Is PN7150B0HN/C11004 Anti-tearing recovery procedure triggered ? */
@@ -336,9 +336,8 @@ uint8_t Electroniccats_PN7150::ConfigMode(uint8_t modeSE)
 
 uint8_t Electroniccats_PN7150::StartDiscovery(uint8_t modeSE)
 {
-    unsigned char TechTabSize = sizeof(
-        modeSE == 1 ? DiscoveryTechnologiesRW : modeSE == 2 ? DiscoveryTechnologiesCE
-                                                            : DiscoveryTechnologiesP2P);
+    unsigned char TechTabSize = (modeSE == 1 ? sizeof(DiscoveryTechnologiesRW) : modeSE == 2 ? sizeof(DiscoveryTechnologiesCE)
+                                                                                             : sizeof(DiscoveryTechnologiesP2P));
 
     NCIStartDiscovery_length = 0;
     NCIStartDiscovery[0] = 0x21;
