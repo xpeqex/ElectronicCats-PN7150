@@ -12,21 +12,21 @@
 *                          arising from its use.
 */
 
-#define NDEF_EMPTY            0x00
-#define NDEF_WELL_KNOWN       0x01
-#define NDEF_MEDIA            0x02
-#define NDEF_ABSOLUTE_URI     0x03
-#define NDEF_EXTERNAL         0x04
-#define NDEF_UNKNOWN          0x05
-#define NDEF_UNCHANGED        0x06
-#define NDEF_RESERVED         0x07
+#define NDEF_EMPTY 0x00
+#define NDEF_WELL_KNOWN 0x01
+#define NDEF_MEDIA 0x02
+#define NDEF_ABSOLUTE_URI 0x03
+#define NDEF_EXTERNAL 0x04
+#define NDEF_UNKNOWN 0x05
+#define NDEF_UNCHANGED 0x06
+#define NDEF_RESERVED 0x07
 
-#define NDEF_RECORD_MB_MASK   0x80
-#define NDEF_RECORD_ME_MASK   0x40
-#define NDEF_RECORD_CF_MASK   0x20
-#define NDEF_RECORD_SR_MASK   0x10
-#define NDEF_RECORD_IL_MASK   0x08
-#define NDEF_RECORD_TNF_MASK  0x07
+#define NDEF_RECORD_MB_MASK 0x80
+#define NDEF_RECORD_ME_MASK 0x40
+#define NDEF_RECORD_CF_MASK 0x20
+#define NDEF_RECORD_SR_MASK 0x10
+#define NDEF_RECORD_IL_MASK 0x08
+#define NDEF_RECORD_TNF_MASK 0x07
 
 typedef enum
 {
@@ -44,19 +44,17 @@ typedef enum
     MEDIA_HANDOVER_BLE_SECURE,
     ABSOLUTE_URI,
     UNSUPPORTED_NDEF_RECORD = 0xFF
-}NdefRecordType_e;
+} NdefRecordType_e;
 
 typedef struct
 {
     NdefRecordType_e recordType;
-    unsigned char *  recordPayload;
-    unsigned int     recordPayloadSize;
+    unsigned char *recordPayload;
+    unsigned int recordPayloadSize;
 } NdefRecord_t;
 
-const char* ndef_helper_WifiAuth(unsigned char auth);
-const char* ndef_helper_WifiEnc(unsigned char enc);
-const char* ndef_helper_UriHead(unsigned char head);
+const char *ndef_helper_WifiAuth(unsigned char auth);
+const char *ndef_helper_WifiEnc(unsigned char enc);
+const char *ndef_helper_UriHead(unsigned char head);
 NdefRecord_t DetectNdefRecordType(unsigned char *pNdefRecord);
-unsigned char* GetNextRecord(unsigned char *pNdefRecord);
-
-
+unsigned char *GetNextRecord(unsigned char *pNdefRecord);

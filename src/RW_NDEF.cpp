@@ -24,7 +24,7 @@
 /* Allocate buffer for NDEF operations */
 unsigned char NdefBuffer[RW_MAX_NDEF_FILE_SIZE];
 
-typedef void RW_NDEF_Fct_t (unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
+typedef void RW_NDEF_Fct_t(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size);
 
 unsigned char *pRW_NdefMessage;
 unsigned short RW_NdefMessage_size;
@@ -41,7 +41,7 @@ bool RW_NDEF_SetMessage(unsigned char *pMessage, unsigned short Message_size, vo
     {
         pRW_NdefMessage = pMessage;
         RW_NdefMessage_size = Message_size;
-        pRW_NDEF_PushCb = (RW_NDEF_Callback_t*) pCb;
+        pRW_NDEF_PushCb = (RW_NDEF_Callback_t *)pCb;
         return true;
     }
     else
@@ -54,7 +54,7 @@ bool RW_NDEF_SetMessage(unsigned char *pMessage, unsigned short Message_size, vo
 
 void RW_NDEF_RegisterPullCallback(void *pCb)
 {
-    pRW_NDEF_PullCb = (RW_NDEF_Callback_t *) pCb;
+    pRW_NDEF_PullCb = (RW_NDEF_Callback_t *)pCb;
 }
 
 void RW_NDEF_Reset(unsigned char type)
@@ -94,12 +94,14 @@ void RW_NDEF_Reset(unsigned char type)
 
 void RW_NDEF_Read_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size)
 {
-    if (pReadFct != NULL) pReadFct(pCmd, Cmd_size, Rsp, pRsp_size);
+    if (pReadFct != NULL)
+        pReadFct(pCmd, Cmd_size, Rsp, pRsp_size);
 }
 
 void RW_NDEF_Write_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *Rsp, unsigned short *pRsp_size)
 {
-    if (pWriteFct != NULL) pWriteFct(pCmd, Cmd_size, Rsp, pRsp_size);
+    if (pWriteFct != NULL)
+        pWriteFct(pCmd, Cmd_size, Rsp, pRsp_size);
 }
 //#endif
 //#endif

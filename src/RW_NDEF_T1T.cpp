@@ -17,12 +17,12 @@
 #include "tool.h"
 #include "RW_NDEF.h"
 
-#define T1T_MAGIC_NUMBER    0xE1
-#define T1T_NDEF_TLV        0x03
+#define T1T_MAGIC_NUMBER 0xE1
+#define T1T_NDEF_TLV 0x03
 
-const unsigned char T1T_RID[] = {0x78,0x00,0x00,0x00,0x00,0x00,0x00};
-const unsigned char T1T_RALL[] = {0x00,0x00,0x00};
-const unsigned char T1T_READ8[] = {0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+const unsigned char T1T_RID[] = {0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const unsigned char T1T_RALL[] = {0x00, 0x00, 0x00};
+const unsigned char T1T_READ8[] = {0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 typedef enum
 {
@@ -57,27 +57,27 @@ void RW_NDEF_T1T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
     /* By default no further command to be sent */
     *pCmd_size = 0;
 
-    switch(eRW_NDEF_T1T_State)
+    switch (eRW_NDEF_T1T_State)
     {
     case Initial:
         /* Send T1T_RID */
-        memcpy (pCmd, T1T_RID, sizeof(T1T_RID));
+        memcpy(pCmd, T1T_RID, sizeof(T1T_RID));
         *pCmd_size = 7;
         eRW_NDEF_T1T_State = Getting_ID;
         break;
 
     case Getting_ID:
         /* Is CC Read and Is Ndef ?*/
-        if ((Rsp_size == 7) && (pRsp[Rsp_size-1] == 0x00))
+        if ((Rsp_size == 7) && (pRsp[Rsp_size - 1] == 0x00))
         {
             /* Fill File structure */
             RW_NDEF_T1T_Ndef.HR0 = pRsp[0];
             RW_NDEF_T1T_Ndef.HR1 = pRsp[1];
-            memcpy (RW_NDEF_T1T_Ndef.UID, &pRsp[2], sizeof(RW_NDEF_T1T_Ndef.UID));
-            
+            memcpy(RW_NDEF_T1T_Ndef.UID, &pRsp[2], sizeof(RW_NDEF_T1T_Ndef.UID));
+
             /* Read full card content */
-            memcpy (pCmd, T1T_RALL, sizeof(T1T_RALL));
-            memcpy (&pCmd[3], RW_NDEF_T1T_Ndef.UID, sizeof(RW_NDEF_T1T_Ndef.UID));
+            memcpy(pCmd, T1T_RALL, sizeof(T1T_RALL));
+            memcpy(&pCmd[3], RW_NDEF_T1T_Ndef.UID, sizeof(RW_NDEF_T1T_Ndef.UID));
             *pCmd_size = sizeof(T1T_RALL) + sizeof(RW_NDEF_T1T_Ndef.UID);
             eRW_NDEF_T1T_State = Reading_CardContent;
         }
@@ -85,9 +85,9 @@ void RW_NDEF_T1T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
 
     case Reading_CardContent:
         /* Is Read success ?*/
-        if ((Rsp_size == 123) && (pRsp[Rsp_size-1] == 0x00))
+        if ((Rsp_size == 123) && (pRsp[Rsp_size - 1] == 0x00))
         {
-            /* Check CC */ 
+            /* Check CC */
             if (pRsp[10] == T1T_MAGIC_NUMBER)
             {
                 unsigned char Tmp = 14;
@@ -96,38 +96,41 @@ void RW_NDEF_T1T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
                 /* If not NDEF Type skip TLV */
                 while (pRsp[Tmp] != T1T_NDEF_TLV)
                 {
-                    Tmp += 2 + pRsp[Tmp+1];
-                    if (Tmp > Rsp_size) return;
+                    Tmp += 2 + pRsp[Tmp + 1];
+                    if (Tmp > Rsp_size)
+                        return;
                 }
 
-                RW_NDEF_T1T_Ndef.MessageSize = pRsp[Tmp+1];
+                RW_NDEF_T1T_Ndef.MessageSize = pRsp[Tmp + 1];
                 data_size = (Rsp_size - 1) - 16 - Tmp - 2;
 
                 /* If provisioned buffer is not large enough, notify the application and stop reading */
                 if (RW_NDEF_T1T_Ndef.MessageSize > RW_MAX_NDEF_FILE_SIZE)
                 {
-                    if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(NULL, 0);
+                    if (pRW_NDEF_PullCb != NULL)
+                        pRW_NDEF_PullCb(NULL, 0);
                     break;
                 }
 
                 /* Is NDEF read already completed ? */
-                if(RW_NDEF_T1T_Ndef.MessageSize <= data_size)
+                if (RW_NDEF_T1T_Ndef.MessageSize <= data_size)
                 {
-                    memcpy(RW_NDEF_T1T_Ndef.pMessage, &pRsp[Tmp+2], RW_NDEF_T1T_Ndef.MessageSize);
+                    memcpy(RW_NDEF_T1T_Ndef.pMessage, &pRsp[Tmp + 2], RW_NDEF_T1T_Ndef.MessageSize);
 
                     /* Notify application of the NDEF reception */
-                    if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(RW_NDEF_T1T_Ndef.pMessage, RW_NDEF_T1T_Ndef.MessageSize);
+                    if (pRW_NDEF_PullCb != NULL)
+                        pRW_NDEF_PullCb(RW_NDEF_T1T_Ndef.pMessage, RW_NDEF_T1T_Ndef.MessageSize);
                 }
                 else
                 {
                     RW_NDEF_T1T_Ndef.MessagePtr = data_size;
-                    memcpy (RW_NDEF_T1T_Ndef.pMessage, &pRsp[Tmp+2], RW_NDEF_T1T_Ndef.MessagePtr);
+                    memcpy(RW_NDEF_T1T_Ndef.pMessage, &pRsp[Tmp + 2], RW_NDEF_T1T_Ndef.MessagePtr);
                     RW_NDEF_T1T_Ndef.BlkNb = 0x10;
 
                     /* Read NDEF content */
-                    memcpy (pCmd, T1T_READ8, sizeof(T1T_READ8));
+                    memcpy(pCmd, T1T_READ8, sizeof(T1T_READ8));
                     pCmd[1] = RW_NDEF_T1T_Ndef.BlkNb;
-                    memcpy (&pCmd[10], RW_NDEF_T1T_Ndef.UID, sizeof(RW_NDEF_T1T_Ndef.UID));
+                    memcpy(&pCmd[10], RW_NDEF_T1T_Ndef.UID, sizeof(RW_NDEF_T1T_Ndef.UID));
                     *pCmd_size = sizeof(T1T_READ8) + sizeof(RW_NDEF_T1T_Ndef.UID);
 
                     eRW_NDEF_T1T_State = Reading_NDEF;
@@ -136,31 +139,32 @@ void RW_NDEF_T1T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
         }
         break;
 
-        case Reading_NDEF:
-            /* Is Read success ?*/
-            if ((Rsp_size == 10) && (pRsp[Rsp_size-1] == 0x00))
+    case Reading_NDEF:
+        /* Is Read success ?*/
+        if ((Rsp_size == 10) && (pRsp[Rsp_size - 1] == 0x00))
+        {
+            /* Is NDEF read already completed ? */
+            if ((RW_NDEF_T1T_Ndef.MessageSize - RW_NDEF_T1T_Ndef.MessagePtr) < 8)
             {
-                /* Is NDEF read already completed ? */
-                if ((RW_NDEF_T1T_Ndef.MessageSize - RW_NDEF_T1T_Ndef.MessagePtr) < 8)
-                {
-                    memcpy (&RW_NDEF_T1T_Ndef.pMessage[RW_NDEF_T1T_Ndef.MessagePtr], &pRsp[1], RW_NDEF_T1T_Ndef.MessageSize - RW_NDEF_T1T_Ndef.MessagePtr);
+                memcpy(&RW_NDEF_T1T_Ndef.pMessage[RW_NDEF_T1T_Ndef.MessagePtr], &pRsp[1], RW_NDEF_T1T_Ndef.MessageSize - RW_NDEF_T1T_Ndef.MessagePtr);
 
-                    /* Notify application of the NDEF reception */
-                    if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(RW_NDEF_T1T_Ndef.pMessage, RW_NDEF_T1T_Ndef.MessageSize);
-                }
-                else
-                {
-                    memcpy (&RW_NDEF_T1T_Ndef.pMessage[RW_NDEF_T1T_Ndef.MessagePtr], &pRsp[1], 8);
-                    RW_NDEF_T1T_Ndef.MessagePtr += 8;
-                    RW_NDEF_T1T_Ndef.BlkNb++;
-
-                    /* Read NDEF content */
-                    memcpy (pCmd, T1T_READ8, sizeof(T1T_READ8));
-                    pCmd[1] = RW_NDEF_T1T_Ndef.BlkNb;
-                    memcpy (&pCmd[10], RW_NDEF_T1T_Ndef.UID, sizeof(RW_NDEF_T1T_Ndef.UID));
-                    *pCmd_size = sizeof(T1T_READ8) + sizeof(RW_NDEF_T1T_Ndef.UID);
-                }
+                /* Notify application of the NDEF reception */
+                if (pRW_NDEF_PullCb != NULL)
+                    pRW_NDEF_PullCb(RW_NDEF_T1T_Ndef.pMessage, RW_NDEF_T1T_Ndef.MessageSize);
             }
+            else
+            {
+                memcpy(&RW_NDEF_T1T_Ndef.pMessage[RW_NDEF_T1T_Ndef.MessagePtr], &pRsp[1], 8);
+                RW_NDEF_T1T_Ndef.MessagePtr += 8;
+                RW_NDEF_T1T_Ndef.BlkNb++;
+
+                /* Read NDEF content */
+                memcpy(pCmd, T1T_READ8, sizeof(T1T_READ8));
+                pCmd[1] = RW_NDEF_T1T_Ndef.BlkNb;
+                memcpy(&pCmd[10], RW_NDEF_T1T_Ndef.UID, sizeof(RW_NDEF_T1T_Ndef.UID));
+                *pCmd_size = sizeof(T1T_READ8) + sizeof(RW_NDEF_T1T_Ndef.UID);
+            }
+        }
         break;
 
     default:

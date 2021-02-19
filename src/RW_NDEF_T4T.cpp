@@ -17,16 +17,16 @@
 #include "tool.h"
 #include "RW_NDEF.h"
 
-const unsigned char RW_NDEF_T4T_APP_Select20[] = {0x00,0xA4,0x04,0x00,0x07,0xD2,0x76,0x00,0x00,0x85,0x01,0x01,0x00};
-const unsigned char RW_NDEF_T4T_APP_Select10[] = {0x00,0xA4,0x04,0x00,0x07,0xD2,0x76,0x00,0x00,0x85,0x01,0x00};
-const unsigned char RW_NDEF_T4T_CC_Select[] = {0x00,0xA4,0x00,0x0C,0x02,0xE1,0x03};
-const unsigned char RW_NDEF_T4T_NDEF_Select[] = {0x00,0xA4,0x00,0x0C,0x02,0xE1,0x04};
-const unsigned char RW_NDEF_T4T_Read[] = {0x00,0xB0,0x00,0x00,0x0F};
-const unsigned char RW_NDEF_T4T_Write[] = {0x00,0xD6,0x00,0x00,0x00};
+const unsigned char RW_NDEF_T4T_APP_Select20[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01, 0x00};
+const unsigned char RW_NDEF_T4T_APP_Select10[] = {0x00, 0xA4, 0x04, 0x00, 0x07, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x00};
+const unsigned char RW_NDEF_T4T_CC_Select[] = {0x00, 0xA4, 0x00, 0x0C, 0x02, 0xE1, 0x03};
+const unsigned char RW_NDEF_T4T_NDEF_Select[] = {0x00, 0xA4, 0x00, 0x0C, 0x02, 0xE1, 0x04};
+const unsigned char RW_NDEF_T4T_Read[] = {0x00, 0xB0, 0x00, 0x00, 0x0F};
+const unsigned char RW_NDEF_T4T_Write[] = {0x00, 0xD6, 0x00, 0x00, 0x00};
 
 const unsigned char RW_NDEF_T4T_OK[] = {0x90, 0x00};
 
-#define WRITE_SZ    54
+#define WRITE_SZ 54
 
 typedef enum
 {
@@ -71,7 +71,7 @@ void RW_NDEF_T4T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
     /* By default no further command to be sent */
     *pCmd_size = 0;
 
-    switch(eRW_NDEF_T4T_State)
+    switch (eRW_NDEF_T4T_State)
     {
     case Initial:
         /* Select NDEF Application in version 2.0 */
@@ -134,10 +134,11 @@ void RW_NDEF_T4T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
             RW_NDEF_T4T_Ndef.MaxNdefFileSize = (pRsp[11] << 8) + pRsp[12];
             RW_NDEF_T4T_Ndef.RdAccess = pRsp[13];
             RW_NDEF_T4T_Ndef.WrAccess = pRsp[14];
-            
+
             /* Select NDEF */
             memcpy(pCmd, RW_NDEF_T4T_NDEF_Select, sizeof(RW_NDEF_T4T_NDEF_Select));
-            if (RW_NDEF_T4T_Ndef.MappingVersion == 0x10) pCmd[3] = 0x00;
+            if (RW_NDEF_T4T_Ndef.MappingVersion == 0x10)
+                pCmd[3] = 0x00;
             pCmd[5] = RW_NDEF_T4T_Ndef.FileID[0];
             pCmd[6] = RW_NDEF_T4T_Ndef.FileID[1];
             *pCmd_size = sizeof(RW_NDEF_T4T_NDEF_Select);
@@ -166,7 +167,8 @@ void RW_NDEF_T4T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
             /* If provisioned buffer is not large enough, notify the application and stop reading */
             if (RW_NDEF_T4T_Ndef.MessageSize > RW_MAX_NDEF_FILE_SIZE)
             {
-                if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(NULL, 0);
+                if (pRW_NDEF_PullCb != NULL)
+                    pRW_NDEF_PullCb(NULL, 0);
                 break;
             }
 
@@ -174,8 +176,8 @@ void RW_NDEF_T4T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
 
             /* Read NDEF data */
             memcpy(pCmd, RW_NDEF_T4T_Read, sizeof(RW_NDEF_T4T_Read));
-            pCmd[3] =  2;
-            pCmd[4] = (RW_NDEF_T4T_Ndef.MessageSize > RW_NDEF_T4T_Ndef.MLe-1) ? RW_NDEF_T4T_Ndef.MLe-1 : (unsigned char) RW_NDEF_T4T_Ndef.MessageSize;
+            pCmd[3] = 2;
+            pCmd[4] = (RW_NDEF_T4T_Ndef.MessageSize > RW_NDEF_T4T_Ndef.MLe - 1) ? RW_NDEF_T4T_Ndef.MLe - 1 : (unsigned char)RW_NDEF_T4T_Ndef.MessageSize;
             *pCmd_size = sizeof(RW_NDEF_T4T_Read);
             eRW_NDEF_T4T_State = Reading_NDEF;
         }
@@ -187,19 +189,20 @@ void RW_NDEF_T4T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
         {
             memcpy(&RW_NDEF_T4T_Ndef.pMessage[RW_NDEF_T4T_Ndef.MessagePtr], pRsp, Rsp_size - 2);
             RW_NDEF_T4T_Ndef.MessagePtr += Rsp_size - 2;
-            
+
             /* Is NDEF message read completed ?*/
             if (RW_NDEF_T4T_Ndef.MessagePtr == RW_NDEF_T4T_Ndef.MessageSize)
             {
                 /* Notify application of the NDEF reception */
-                if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(RW_NDEF_T4T_Ndef.pMessage, RW_NDEF_T4T_Ndef.MessageSize);
+                if (pRW_NDEF_PullCb != NULL)
+                    pRW_NDEF_PullCb(RW_NDEF_T4T_Ndef.pMessage, RW_NDEF_T4T_Ndef.MessageSize);
             }
             else
             {
                 /* Read NDEF data */
                 memcpy(pCmd, RW_NDEF_T4T_Read, sizeof(RW_NDEF_T4T_Read));
-                pCmd[3] =  RW_NDEF_T4T_Ndef.MessagePtr + 2;
-                pCmd[4] = ((RW_NDEF_T4T_Ndef.MessageSize - RW_NDEF_T4T_Ndef.MessagePtr) > RW_NDEF_T4T_Ndef.MLe-1) ? RW_NDEF_T4T_Ndef.MLe-1 : (unsigned char) (RW_NDEF_T4T_Ndef.MessageSize - RW_NDEF_T4T_Ndef.MessagePtr);
+                pCmd[3] = RW_NDEF_T4T_Ndef.MessagePtr + 2;
+                pCmd[4] = ((RW_NDEF_T4T_Ndef.MessageSize - RW_NDEF_T4T_Ndef.MessagePtr) > RW_NDEF_T4T_Ndef.MLe - 1) ? RW_NDEF_T4T_Ndef.MLe - 1 : (unsigned char)(RW_NDEF_T4T_Ndef.MessageSize - RW_NDEF_T4T_Ndef.MessagePtr);
                 *pCmd_size = sizeof(RW_NDEF_T4T_Read);
             }
         }
@@ -215,7 +218,7 @@ void RW_NDEF_T4T_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, unsign
     /* By default no further command to be sent */
     *pCmd_size = 0;
 
-    switch(eRW_NDEF_T4T_State)
+    switch (eRW_NDEF_T4T_State)
     {
     case Initial:
         /* Select NDEF Application in version 2.0 */
@@ -281,7 +284,8 @@ void RW_NDEF_T4T_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, unsign
 
             /* Select NDEF */
             memcpy(pCmd, RW_NDEF_T4T_NDEF_Select, sizeof(RW_NDEF_T4T_NDEF_Select));
-            if (RW_NDEF_T4T_Ndef.MappingVersion == 0x10) pCmd[3] = 0x00;
+            if (RW_NDEF_T4T_Ndef.MappingVersion == 0x10)
+                pCmd[3] = 0x00;
             pCmd[5] = RW_NDEF_T4T_Ndef.FileID[0];
             pCmd[6] = RW_NDEF_T4T_Ndef.FileID[1];
             *pCmd_size = sizeof(RW_NDEF_T4T_NDEF_Select);
@@ -312,7 +316,7 @@ void RW_NDEF_T4T_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, unsign
             memcpy(pCmd, RW_NDEF_T4T_Write, sizeof(RW_NDEF_T4T_Write));
             pCmd[2] = (RW_NDEF_T4T_Ndef.MessagePtr + 2) >> 8;
             pCmd[3] = (RW_NDEF_T4T_Ndef.MessagePtr + 2) & 0xFF;
-            if((RW_NdefMessage_size - RW_NDEF_T4T_Ndef.MessagePtr) < WRITE_SZ)
+            if ((RW_NdefMessage_size - RW_NDEF_T4T_Ndef.MessagePtr) < WRITE_SZ)
             {
                 pCmd[4] = (RW_NdefMessage_size - RW_NDEF_T4T_Ndef.MessagePtr);
                 memcpy(&pCmd[5], pRW_NdefMessage + RW_NDEF_T4T_Ndef.MessagePtr, (RW_NdefMessage_size - RW_NDEF_T4T_Ndef.MessagePtr));
@@ -348,7 +352,8 @@ void RW_NDEF_T4T_Write_Next(unsigned char *pRsp, unsigned short Rsp_size, unsign
         if (!memcmp(&pRsp[Rsp_size - 2], RW_NDEF_T4T_OK, sizeof(RW_NDEF_T4T_OK)))
         {
             /* Notify application of the NDEF reception */
-            if(pRW_NDEF_PushCb != NULL) pRW_NDEF_PushCb(pRW_NdefMessage, RW_NdefMessage_size);
+            if (pRW_NDEF_PushCb != NULL)
+                pRW_NDEF_PushCb(pRW_NdefMessage, RW_NdefMessage_size);
         }
         break;
 

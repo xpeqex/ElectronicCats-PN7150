@@ -17,39 +17,39 @@
 #include "P2P_NDEF.h"
 
 /* Well-known LLCP SAP Values */
-#define SAP_SDP         1
-#define SAP_SNEP        4
+#define SAP_SDP 1
+#define SAP_SNEP 4
 
 /* SNEP codes */
-#define SNEP_VER10      0x10
-#define SNEP_PUT        0x2
-#define SNEP_SUCCESS    0x81
+#define SNEP_VER10 0x10
+#define SNEP_PUT 0x2
+#define SNEP_SUCCESS 0x81
 
 /* LLCP PDU Types */
-#define SYMM            0x0
-#define PAX             0x1
-#define AGF             0x2
-#define UI              0x3
-#define CONNECT         0x4
-#define DISC            0x5
-#define CC              0x6
-#define DM              0x7
-#define FRMR            0x8
-#define SNL             0x9
-#define reservedA       0xA
-#define reservedB       0xB
-#define I               0xC
-#define RR              0xD
-#define RNR             0xE
-#define reservedF       0xF
+#define SYMM 0x0
+#define PAX 0x1
+#define AGF 0x2
+#define UI 0x3
+#define CONNECT 0x4
+#define DISC 0x5
+#define CC 0x6
+#define DM 0x7
+#define FRMR 0x8
+#define SNL 0x9
+#define reservedA 0xA
+#define reservedB 0xB
+#define I 0xC
+#define RR 0xD
+#define RNR 0xE
+#define reservedF 0xF
 
 /* LLCP parameters */
-#define VERSION     1
-#define MIUX        2
-#define WKS         3
-#define LTO         4
-#define RW          5
-#define SN          6
+#define VERSION 1
+#define MIUX 2
+#define WKS 3
+#define LTO 4
+#define RW 5
+#define SN 6
 
 const unsigned char SNEP_PUT_SUCCESS[] = {SNEP_VER10, SNEP_SUCCESS, 0x00, 0x00, 0x00, 0x00};
 const unsigned char LLCP_CONNECT_SNEP[] = {0x11, 0x20};
@@ -60,10 +60,10 @@ unsigned char *pNdefMessage;
 unsigned short NdefMessage_size = 0;
 
 /* Defines the number of symmetry exchanges is expected before initiating the NDEF push (to allow a remote phone to beam an NDEF message first) */
-#define NDEF_PUSH_DELAY_COUNT    2
+#define NDEF_PUSH_DELAY_COUNT 2
 
 /* Defines at which frequency the symmetry is exchange (in ms) */
-#define SYMM_FREQ    500
+#define SYMM_FREQ 500
 
 typedef enum
 {
@@ -88,7 +88,7 @@ typedef struct
     unsigned char Sn[30];
 } P2P_NDEF_LlcpHeader_t;
 
-typedef void P2P_NDEF_Callback_t (unsigned char*, unsigned short);
+typedef void P2P_NDEF_Callback_t(unsigned char *, unsigned short);
 
 static P2P_SnepClient_state_t eP2P_SnepClient_State = Initial;
 static P2P_NDEF_Callback_t *pP2P_NDEF_PushCb = NULL;
@@ -103,31 +103,32 @@ static void ParseLlcp(unsigned char *pBuf, unsigned short BufSize, P2P_NDEF_Llcp
     pLlcpHeader->Pdu = ((pBuf[0] & 3) << 2) + (pBuf[1] >> 6);
     pLlcpHeader->Ssap = pBuf[1] & 0x3F;
 
-    while(i<BufSize)
+    while (i < BufSize)
     {
-        switch (pBuf[i]){
+        switch (pBuf[i])
+        {
         case VERSION:
-            pLlcpHeader->Version = pBuf[i+2];
+            pLlcpHeader->Version = pBuf[i + 2];
             break;
         case MIUX:
-            pLlcpHeader->Miux = (pBuf[i+2] << 8) + pBuf[i+3];
+            pLlcpHeader->Miux = (pBuf[i + 2] << 8) + pBuf[i + 3];
             break;
         case WKS:
-            pLlcpHeader->Wks = (pBuf[i+2] << 8) + pBuf[i+3];
+            pLlcpHeader->Wks = (pBuf[i + 2] << 8) + pBuf[i + 3];
             break;
         case LTO:
-            pLlcpHeader->Lto = pBuf[i+2];
+            pLlcpHeader->Lto = pBuf[i + 2];
             break;
         case RW:
-            pLlcpHeader->Rw = pBuf[i+2];
+            pLlcpHeader->Rw = pBuf[i + 2];
             break;
         case SN:
-            memcpy(pLlcpHeader->Sn, &pBuf[i+2], pBuf[i+1] < sizeof(pLlcpHeader->Sn) ? pBuf[i+1] : sizeof(pLlcpHeader->Sn));
+            memcpy(pLlcpHeader->Sn, &pBuf[i + 2], pBuf[i + 1] < sizeof(pLlcpHeader->Sn) ? pBuf[i + 1] : sizeof(pLlcpHeader->Sn));
             break;
         default:
             break;
         }
-        i += pBuf[i+1]+2;
+        i += pBuf[i + 1] + 2;
     }
 }
 
@@ -143,7 +144,7 @@ bool P2P_NDEF_SetMessage(unsigned char *pMessage, unsigned short Message_size, v
     {
         pNdefMessage = pMessage;
         NdefMessage_size = Message_size;
-        pP2P_NDEF_PushCb = (P2P_NDEF_Callback_t*) pCb;
+        pP2P_NDEF_PushCb = (P2P_NDEF_Callback_t *)pCb;
         /* Trigger sending dynamically new message */
         if (eP2P_SnepClient_State == NdefMsgSent)
         {
@@ -161,7 +162,7 @@ bool P2P_NDEF_SetMessage(unsigned char *pMessage, unsigned short Message_size, v
 
 void P2P_NDEF_RegisterPullCallback(void *pCb)
 {
-    pP2P_NDEF_PullCb = (P2P_NDEF_Callback_t*) pCb;
+    pP2P_NDEF_PullCb = (P2P_NDEF_Callback_t *)pCb;
 }
 
 void P2P_NDEF_Reset(void)
@@ -179,12 +180,12 @@ void P2P_NDEF_Reset(void)
 void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *pRsp, unsigned short *pRsp_size)
 {
     P2P_NDEF_LlcpHeader_t LlcpHeader;
-    
+
     /* Initialize answer */
     *pRsp_size = 0;
 
     ParseLlcp(pCmd, Cmd_size, &LlcpHeader);
-    
+
     switch (LlcpHeader.Pdu)
     {
     case CONNECT:
@@ -192,7 +193,7 @@ void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *
         if ((LlcpHeader.Dsap == SAP_SNEP) || (memcmp(LlcpHeader.Sn, "urn:nfc:sn:snep", 15) == 0))
         {
             /* Only accept the connection is application is registered for NDEF reception */
-            if(pP2P_NDEF_PullCb != NULL)
+            if (pP2P_NDEF_PullCb != NULL)
             {
                 LlcpHeader.Pdu = CC;
                 FillLlcp(LlcpHeader, pRsp);
@@ -213,7 +214,8 @@ void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *
         if ((pCmd[3] == SNEP_VER10) && (pCmd[4] == SNEP_PUT))
         {
             /* Notify application of the NDEF reception */
-            if(pP2P_NDEF_PullCb != NULL) pP2P_NDEF_PullCb(&pCmd[9], pCmd[8]);
+            if (pP2P_NDEF_PullCb != NULL)
+                pP2P_NDEF_PullCb(&pCmd[9], pCmd[8]);
 
             /* Acknowledge the PUT request */
             LlcpHeader.Pdu = I;
@@ -231,16 +233,15 @@ void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *
 
     default:
         break;
-
     }
 
     /* No answer was set */
     if (*pRsp_size == 0)
     {
-        switch(eP2P_SnepClient_State)
+        switch (eP2P_SnepClient_State)
         {
         case Initial:
-            if((pP2P_NDEF_PullCb == NULL) || (NDEF_PUSH_DELAY_COUNT == 0))
+            if ((pP2P_NDEF_PullCb == NULL) || (NDEF_PUSH_DELAY_COUNT == 0))
             {
                 memcpy(pRsp, LLCP_CONNECT_SNEP, sizeof(LLCP_CONNECT_SNEP));
                 *pRsp_size = sizeof(LLCP_CONNECT_SNEP);
@@ -251,14 +252,14 @@ void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *
                 P2P_SnepClient_DelayCount = 1;
                 eP2P_SnepClient_State = DelayingPush;
                 /* Wait then send a SYMM */
-                Sleep (SYMM_FREQ);
+                Sleep(SYMM_FREQ);
                 memcpy(pRsp, LLCP_SYMM, sizeof(LLCP_SYMM));
                 *pRsp_size = sizeof(LLCP_SYMM);
             }
             break;
 
         case DelayingPush:
-            if(P2P_SnepClient_DelayCount == NDEF_PUSH_DELAY_COUNT)
+            if (P2P_SnepClient_DelayCount == NDEF_PUSH_DELAY_COUNT)
             {
                 memcpy(pRsp, LLCP_CONNECT_SNEP, sizeof(LLCP_CONNECT_SNEP));
                 *pRsp_size = sizeof(LLCP_CONNECT_SNEP);
@@ -268,7 +269,7 @@ void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *
             {
                 P2P_SnepClient_DelayCount++;
                 /* Wait then send a SYMM */
-                Sleep (SYMM_FREQ);
+                Sleep(SYMM_FREQ);
                 memcpy(pRsp, LLCP_SYMM, sizeof(LLCP_SYMM));
                 *pRsp_size = sizeof(LLCP_SYMM);
             }
@@ -283,17 +284,18 @@ void P2P_NDEF_Next(unsigned char *pCmd, unsigned short Cmd_size, unsigned char *
             pRsp[5] = 0;
             pRsp[6] = 0;
             pRsp[7] = 0;
-            pRsp[8] = (unsigned char) NdefMessage_size;
+            pRsp[8] = (unsigned char)NdefMessage_size;
             memcpy(&pRsp[9], pNdefMessage, NdefMessage_size);
             *pRsp_size = 9 + NdefMessage_size;
             eP2P_SnepClient_State = NdefMsgSent;
             /* Notify application of the NDEF push */
-            if(pP2P_NDEF_PushCb != NULL) pP2P_NDEF_PushCb(pNdefMessage, NdefMessage_size);
+            if (pP2P_NDEF_PushCb != NULL)
+                pP2P_NDEF_PushCb(pNdefMessage, NdefMessage_size);
             break;
 
         default:
             /* Wait then send a SYMM */
-            Sleep (SYMM_FREQ);
+            Sleep(SYMM_FREQ);
             memcpy(pRsp, LLCP_SYMM, sizeof(LLCP_SYMM));
             *pRsp_size = sizeof(LLCP_SYMM);
             break;

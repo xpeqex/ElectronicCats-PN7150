@@ -17,10 +17,10 @@
 #include "tool.h"
 #include "RW_NDEF.h"
 
-#define T3T_MAGIC_NUMBER    0xE1
-#define T3T_NDEF_TLV        0x03
+#define T3T_MAGIC_NUMBER 0xE1
+#define T3T_NDEF_TLV 0x03
 
-unsigned char T3T_Check[] = {0x10,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x0B,0x00,0x1,0x80,0x00};
+unsigned char T3T_Check[] = {0x10, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0B, 0x00, 0x1, 0x80, 0x00};
 
 typedef enum
 {
@@ -58,18 +58,18 @@ void RW_NDEF_T3T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
     /* By default no further command to be sent */
     *pCmd_size = 0;
 
-    switch(eRW_NDEF_T3T_State)
+    switch (eRW_NDEF_T3T_State)
     {
     case Initial:
         /* Get AttributeInfo */
-        memcpy (pCmd, T3T_Check, sizeof(T3T_Check));
+        memcpy(pCmd, T3T_Check, sizeof(T3T_Check));
         *pCmd_size = sizeof(T3T_Check);
         eRW_NDEF_T3T_State = Getting_AttributeInfo;
         break;
 
     case Getting_AttributeInfo:
         /* Is Check success ?*/
-        if ((pRsp[Rsp_size-1] == 0x00) && (pRsp[1] == 0x07) && (pRsp[10] == 0x00) && (pRsp[11] == 0x00))
+        if ((pRsp[Rsp_size - 1] == 0x00) && (pRsp[1] == 0x07) && (pRsp[10] == 0x00) && (pRsp[11] == 0x00))
         {
             /* Fill File structure */
             RW_NDEF_T3T_Ndef.Size = (pRsp[24] << 16) + (pRsp[25] << 16) + pRsp[26];
@@ -77,7 +77,8 @@ void RW_NDEF_T3T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
             /* If provisioned buffer is not large enough or size is null, notify the application and stop reading */
             if ((RW_NDEF_T3T_Ndef.Size > RW_MAX_NDEF_FILE_SIZE) || (RW_NDEF_T3T_Ndef.Size == 0))
             {
-                if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(NULL, 0);
+                if (pRW_NDEF_PullCb != NULL)
+                    pRW_NDEF_PullCb(NULL, 0);
                 break;
             }
 
@@ -85,7 +86,7 @@ void RW_NDEF_T3T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
             RW_NDEF_T3T_Ndef.BlkNb = 1;
 
             /* Read first NDEF block */
-            memcpy (pCmd, T3T_Check, sizeof(T3T_Check));
+            memcpy(pCmd, T3T_Check, sizeof(T3T_Check));
             pCmd[15] = 0x01;
             *pCmd_size = sizeof(T3T_Check);
             eRW_NDEF_T3T_State = Reading_CardContent;
@@ -94,14 +95,15 @@ void RW_NDEF_T3T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
 
     case Reading_CardContent:
         /* Is Check success ?*/
-        if ((pRsp[Rsp_size-1] == 0x00) && (pRsp[1] == 0x07) && (pRsp[10] == 0x00) && (pRsp[11] == 0x00))
+        if ((pRsp[Rsp_size - 1] == 0x00) && (pRsp[1] == 0x07) && (pRsp[10] == 0x00) && (pRsp[11] == 0x00))
         {
             /* Is NDEF message read completed ?*/
             if ((RW_NDEF_T3T_Ndef.Size - RW_NDEF_T3T_Ndef.Ptr) <= 16)
             {
                 memcpy(&RW_NDEF_T3T_Ndef.p[RW_NDEF_T3T_Ndef.Ptr], &pRsp[13], (RW_NDEF_T3T_Ndef.Size - RW_NDEF_T3T_Ndef.Ptr));
                 /* Notify application of the NDEF reception */
-                if(pRW_NDEF_PullCb != NULL) pRW_NDEF_PullCb(RW_NDEF_T3T_Ndef.p, RW_NDEF_T3T_Ndef.Size);
+                if (pRW_NDEF_PullCb != NULL)
+                    pRW_NDEF_PullCb(RW_NDEF_T3T_Ndef.p, RW_NDEF_T3T_Ndef.Size);
             }
             else
             {
@@ -110,7 +112,7 @@ void RW_NDEF_T3T_Read_Next(unsigned char *pRsp, unsigned short Rsp_size, unsigne
                 RW_NDEF_T3T_Ndef.BlkNb++;
 
                 /* Read next NDEF block */
-                memcpy (pCmd, T3T_Check, sizeof(T3T_Check));
+                memcpy(pCmd, T3T_Check, sizeof(T3T_Check));
                 pCmd[15] = RW_NDEF_T3T_Ndef.BlkNb;
                 *pCmd_size = sizeof(T3T_Check);
             }
