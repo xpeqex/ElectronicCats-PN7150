@@ -555,7 +555,7 @@ bool Electroniccats_PN7150::ReaderTagCmd(unsigned char *pCommand, unsigned char 
     return status;
 }
 
-bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf)
+bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf, uint8_t tout)
 {
     uint8_t NCIRfDiscoverSelect[] = {0x21, 0x04, 0x03, 0x01, PROT_ISODEP, INTF_ISODEP};
 
@@ -568,7 +568,9 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf)
 wait:
     do
     {
-        getMessage(1337); //Infinite loop, waiting for response
+        getMessage(
+            tout > 0 ? tout : 1337
+        ); //Infinite loop, waiting for response
     } while ((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03)));
 
     gNextTag_Protocol = PROT_UNDETERMINED;
