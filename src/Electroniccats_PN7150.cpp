@@ -154,7 +154,7 @@ uint8_t Electroniccats_PN7150::wakeupNCI()
 
     // Reset RF settings restauration flag
     (void)writeData(NCICoreReset, 4);
-    getMessage();
+    getMessage(15);
     NbBytes = rxMessageLength;
     if ((NbBytes == 0) || (rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x00))
     {
