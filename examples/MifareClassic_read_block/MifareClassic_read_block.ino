@@ -123,7 +123,6 @@ void loop(){
                 }
             break;
           }
-          nfc.ProcessReaderMode(RfInterface, READ_NDEF);
           PCD_MIFARE_scenario();
           break;
       
