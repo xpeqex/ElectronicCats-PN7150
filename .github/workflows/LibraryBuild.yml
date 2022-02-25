@@ -31,6 +31,7 @@ jobs:
           - arduino:avr:uno
           - arduino:avr:leonardo
           - arduino:samd:nano_33_iot
+          - arduino:mbed:envie_m7
           - esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
 
         # Specify parameters for each board.
@@ -44,6 +45,8 @@ jobs:
           - arduino-boards-fqbn: arduino:avr:leonardo
           
           - arduino-boards-fqbn: arduino:samd:nano_33_iot
+          
+          - arduino-boards-fqbn: arduino:mbed:envie_m7
 
           - arduino-boards-fqbn: esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
