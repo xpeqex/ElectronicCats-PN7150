@@ -78,7 +78,7 @@ uint8_t Electroniccats_PN7150::writeData(uint8_t txBuffer[], uint32_t txBufferLe
 {
     uint32_t nmbrBytesWritten = 0;
     Wire.beginTransmission((uint8_t)_I2Caddress);
-    nmbrBytesWritten = Wire.write(txBuffer, txBufferLevel);
+    nmbrBytesWritten = Wire.write(txBuffer, (int)(txBufferLevel));
     if (nmbrBytesWritten == txBufferLevel)
     {
         byte resultCode;
