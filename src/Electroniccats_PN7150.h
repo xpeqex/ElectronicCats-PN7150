@@ -27,6 +27,7 @@
 #include <i2c_t3.h>                           // Credits Brian "nox771" : see https://forum.pjrc.com/threads/21680-New-I2C-library-for-Teensy3
 #else
 #include <Wire.h>
+#include <I2C_dev.h>
 #if defined(__AVR__) || defined(__i386__) || defined(ARDUINO_ARCH_SAMD) || defined(ESP8266) || defined(ARDUINO_ARCH_STM32)
 #define WIRE Wire
 #else // Arduino Due
