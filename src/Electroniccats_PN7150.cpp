@@ -467,7 +467,7 @@ bool Electroniccats_PN7150::CardModeReceive(unsigned char *pData, unsigned char 
     bool status = NFC_ERROR;
     uint8_t Ans[MAX_NCI_FRAME_SIZE];
 
-    (void)writeData(Ans, sizeof(Ans));
+    (void)writeData(Ans, 255);
     getMessage(2000);
 
     /* Is data packet ? */
