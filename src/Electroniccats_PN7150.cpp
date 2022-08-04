@@ -78,11 +78,17 @@ uint8_t Electroniccats_PN7150::writeData(uint8_t txBuffer[], uint32_t txBufferLe
 {
     uint32_t nmbrBytesWritten = 0;
     Wire.beginTransmission((uint8_t)_I2Caddress); //configura transmision
-    nmbrBytesWritten = Wire.write(txBuffer, (int)(txBufferLevel)); //carga en buffer
+    nmbrBytesWritten = Wire.write(txBuffer, (size_t)(txBufferLevel)); //carga en buffer
+    #ifdef DEBUG2
+        Serial.println("[DEBUG] written bytes = 0x"+String(nmbrBytesWritten,HEX));
+    #endif
     if (nmbrBytesWritten == txBufferLevel)
     {
         byte resultCode;
         resultCode = Wire.endTransmission(); //envio de datos segun yo
+        #ifdef DEBUG2
+        Serial.println("[DEBUG] write data code = 0x"+String(resultCode,HEX));
+        #endif
         return resultCode;
     }
     else
@@ -93,25 +99,38 @@ uint8_t Electroniccats_PN7150::writeData(uint8_t txBuffer[], uint32_t txBufferLe
 
 uint32_t Electroniccats_PN7150::readData(uint8_t rxBuffer[]) const
 {
-    uint8_t bytesReceived; // keeps track of how many bytes we actually received
+    uint32_t bytesReceived; // keeps track of how many bytes we actually received
     if (hasMessage())
     {                                                              // only try to read something if the PN7150 indicates it has something
         bytesReceived = Wire.requestFrom(_I2Caddress, (uint8_t)3); // first reading the header, as this contains how long the payload will be
-        //I2Cdev::writeBytes(_I2Caddress, 0x00, 3, &bytesReceived);
-        //I2Cdev::readBytes(_I2Caddress, 0x00, 3, &bytesReceived);
+       
         //Imprimir datos de bytes received, tratar de extraer con funcion read
         //Leer e inyectar directo al buffer los siguientes 3
+        #ifdef DEBUG2
+        Serial.println("[DEBUG] bytesReceived = 0x"+String(bytesReceived,HEX));
+        #endif
         rxBuffer[0] = Wire.read();
         rxBuffer[1] = Wire.read();
         rxBuffer[2] = Wire.read();
+        #ifdef DEBUG2
+        for(int i=0;i<3;i++){
+             Serial.println("[DEBUG] Byte["+String(i)+"] = 0x"+String(rxBuffer[i],HEX));
+        }
+        #endif
         uint8_t payloadLength = rxBuffer[2];
         if (payloadLength > 0)
         {
             bytesReceived += Wire.requestFrom(_I2Caddress, (uint8_t)payloadLength); // then reading the payload, if any
+            #ifdef DEBUG2
+            Serial.println("[DEBUG] payload bytes = 0x"+String(bytesReceived-3,HEX));
+            #endif
             uint32_t index = 3;
             while (index < bytesReceived)
             {
                 rxBuffer[index] = Wire.read();
+                #ifdef DEBUG2
+                Serial.println("[DEBUG] payload["+String(index)+"] = 0x"+String(rxBuffer[index],HEX));
+                #endif
                 index++;
             }
             index = 0;
@@ -212,12 +231,12 @@ uint8_t Electroniccats_PN7150::connectNCI()
     gNfcController_fw_version[0] = rxBuffer[17 + rxBuffer[8]]; //0xROM_CODE_V
     gNfcController_fw_version[1] = rxBuffer[18 + rxBuffer[8]]; //0xFW_MAJOR_NO
     gNfcController_fw_version[2] = rxBuffer[19 + rxBuffer[8]]; //0xFW_MINOR_NO
-#ifdef SerialUSB
+
     Serial.println("0xROM_CODE_V: " + String(gNfcController_fw_version[0], HEX));
     Serial.println("FW_MAJOR_NO: " + String(gNfcController_fw_version[1], HEX));
     Serial.println("0xFW_MINOR_NO: " + String(gNfcController_fw_version[2], HEX));
     Serial.println("gNfcController_generation: " + String(gNfcController_generation, HEX));
-#endif
+
     return SUCCESS;
 }
 
@@ -442,6 +461,9 @@ bool Electroniccats_PN7150::CardModeSend(unsigned char *pData, unsigned char Dat
 
 bool Electroniccats_PN7150::CardModeReceive(unsigned char *pData, unsigned char *pDataSize)
 {
+    #ifdef DEBUG2
+        Serial.println("[DEBUG] cardModeReceive exec");
+    #endif
     bool status = NFC_ERROR;
     uint8_t Ans[MAX_NCI_FRAME_SIZE];
 
@@ -451,9 +473,9 @@ bool Electroniccats_PN7150::CardModeReceive(unsigned char *pData, unsigned char 
     /* Is data packet ? */
     if ((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00))
     {
-#ifdef SerialUSB
+
         Serial.println(rxBuffer[2]);
-#endif
+
         *pDataSize = rxBuffer[2];
         memcpy(pData, &rxBuffer[3], *pDataSize);
         status = NFC_SUCCESS;
