@@ -7,7 +7,7 @@ labels: bug
 
 **Please, before reporting any issue**
 - Make sure your board it's in good condition.
-- Make sure your MPU6050 it's in good condition.
+- Make sure your PN7150 it's in good condition.
 - Verify that it really is a library problem and not a hardware problem.
 - **Avoid** to submit a GitHub issue for project troubleshooting.
 
