@@ -5,6 +5,7 @@ title: 'ElectronicCats'
 labels: bug
 ---
 
+
 **Please, before reporting any issue**
 - Make sure your board it's in good condition.
 - Make sure your PN7150 it's in good condition.
