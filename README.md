@@ -15,15 +15,22 @@ To install, use the Arduino Library Manager and search for "PN7150" and install 
 ### Manual Installing
 To install this library:
 
- - install it using the Arduino Library manager ("Sketch" -> "Include
+ - Install it using the Arduino Library manager ("Sketch" -> "Include
    Library" -> "Manage Libraries..."), or
- - download a zipfile from github using the "Download ZIP" button and
+ - Download a zipfile from github using the "Download ZIP" button and
    install it using the IDE ("Sketch" -> "Include Library" -> "Add .ZIP
    Library..."
- - clone this git repository into your sketchbook/libraries folder.
+ - Clone this git repository into your sketchbook/libraries folder.
+ For more info, see https://www.arduino.cc/en/Guide/Libraries
 
-For more info, see https://www.arduino.cc/en/Guide/Libraries
+### Compatibility
 
+| Board | Compatibility |
+| ------------- | ------------- |
+| Arduino UNO  | Not compatible  |
+| Arduino MEGA  | Not compatible  |
+| Arduino Leonardo  | Compatible  |
+| Arduino MKR Family  | Compatible  |
 
 ### Maintainer
 
