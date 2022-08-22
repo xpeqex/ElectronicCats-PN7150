@@ -31,6 +31,8 @@ To install this library:
 | Arduino MEGA  | Not compatible  |
 | Arduino Leonardo  | Compatible  |
 | Arduino MKR Family  | Compatible  |
+| ESP32  | Compatible  |
+| RP2040 | Compatible  |
 
 ### Maintainer
 
