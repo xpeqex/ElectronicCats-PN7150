@@ -590,6 +590,7 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf, uint
     uint8_t saved_NTF[7];
 
     gNextTag_Protocol = PROT_UNDETERMINED;
+    bool getFlag = false;
 wait:
     do
     {
