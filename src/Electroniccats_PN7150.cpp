@@ -593,11 +593,10 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf, uint
 wait:
     do
     {
-        getMessage(
+        getFlag = getMessage(
             tout > 0 ? tout : 1337
         ); //Infinite loop, waiting for response
-    } while ((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03)));
-
+    } while (((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03))) && (getFlag == true));
     gNextTag_Protocol = PROT_UNDETERMINED;
 
     /* Is RF_INTF_ACTIVATED_NTF ? */
