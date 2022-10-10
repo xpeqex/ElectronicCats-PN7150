@@ -231,11 +231,12 @@ uint8_t Electroniccats_PN7150::connectNCI()
     gNfcController_fw_version[0] = rxBuffer[17 + rxBuffer[8]]; //0xROM_CODE_V
     gNfcController_fw_version[1] = rxBuffer[18 + rxBuffer[8]]; //0xFW_MAJOR_NO
     gNfcController_fw_version[2] = rxBuffer[19 + rxBuffer[8]]; //0xFW_MINOR_NO
-
+    #ifdef DEBUG
     Serial.println("0xROM_CODE_V: " + String(gNfcController_fw_version[0], HEX));
     Serial.println("FW_MAJOR_NO: " + String(gNfcController_fw_version[1], HEX));
     Serial.println("0xFW_MINOR_NO: " + String(gNfcController_fw_version[2], HEX));
     Serial.println("gNfcController_generation: " + String(gNfcController_generation, HEX));
+    #endif
 
     return SUCCESS;
 }
@@ -474,8 +475,9 @@ bool Electroniccats_PN7150::CardModeReceive(unsigned char *pData, unsigned char 
     if ((rxBuffer[0] == 0x00) && (rxBuffer[1] == 0x00))
     {
 
+        #ifdef DEBUG2
         Serial.println(rxBuffer[2]);
-
+        #endif
         *pDataSize = rxBuffer[2];
         memcpy(pData, &rxBuffer[3], *pDataSize);
         status = NFC_SUCCESS;
