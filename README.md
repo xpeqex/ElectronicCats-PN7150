@@ -27,9 +27,7 @@ To install this library:
 
 | Board | Compatibility |
 | ------------- | ------------- |
-| Arduino UNO  | Not compatible  |
-| Arduino MEGA  | Not compatible  |
-| Arduino Leonardo  | Compatible  |
+| Arduino AVR Family  | Not compatible  |
 | Arduino MKR Family  | Compatible  |
 | ESP32  | Compatible  |
 | RP2040 | Compatible  |
