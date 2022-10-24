@@ -29,6 +29,7 @@
 #include <Wire.h>
 #endif
 
+#define NO_PN7150_RESET_PIN 255
 /* Following definitions specifies which settings will apply when NxpNci_ConfigureSettings()
  * API is called from the application
  */

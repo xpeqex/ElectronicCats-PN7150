@@ -53,18 +53,21 @@ Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin,
                 uint8_t I2Caddress, TwoWire *wire) : _IRQpin(IRQpin), _VENpin(VENpin), _I2Caddress(I2Caddress), _wire(wire)
 {
     pinMode(_IRQpin, INPUT);
-    pinMode(_VENpin, OUTPUT);
+    if (_VENpin != 255)
+        pinMode(_VENpin, OUTPUT);
 }
 
 uint8_t Electroniccats_PN7150::begin()
 {
     _wire->begin();
-    digitalWrite(_VENpin, HIGH);
-    delay(1);
-    digitalWrite(_VENpin, LOW);
-    delay(1);
-    digitalWrite(_VENpin, HIGH);
-    delay(3);
+    if (_VENpin != 255) {
+        digitalWrite(_VENpin, HIGH);
+        delay(1);
+        digitalWrite(_VENpin, LOW);
+        delay(1);
+        digitalWrite(_VENpin, HIGH);
+        delay(3);
+    }
     return SUCCESS;
 }
 
