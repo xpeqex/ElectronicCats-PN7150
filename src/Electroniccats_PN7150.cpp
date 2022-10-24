@@ -1,13 +1,13 @@
 /**
- * NXP PN7150 Driver 
- * Porting authors: 
+ * NXP PN7150 Driver
+ * Porting authors:
  *        Salvador Mendoza - @Netxing - salmg.net
  *        Andres Sabas - Electronic Cats - Electroniccats.com
  *
  *  November 2020
- * 
- * This code is beerware; if you see me (or any other collaborator 
- * member) at the local, and you've found our code helpful, 
+ *
+ * This code is beerware; if you see me (or any other collaborator
+ * member) at the local, and you've found our code helpful,
  * please buy us a round!
  * Distributed as-is; no warranty is given.
  *
@@ -49,9 +49,8 @@ unsigned char DiscoveryTechnologiesP2P[] = { //P2P
     MODE_LISTEN | TECH_ACTIVE_NFCA,
     MODE_LISTEN | TECH_ACTIVE_NFCF};
 
-Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin, uint8_t I2Caddress) : _IRQpin(IRQpin),
-                                                                                                   _VENpin(VENpin),
-                                                                                                   _I2Caddress(I2Caddress)
+Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin,
+                uint8_t I2Caddress, TwoWire *wire) : _IRQpin(IRQpin), _VENpin(VENpin), _I2Caddress(I2Caddress), _wire(wire)
 {
     pinMode(_IRQpin, INPUT);
     pinMode(_VENpin, OUTPUT);
@@ -59,7 +58,7 @@ Electroniccats_PN7150::Electroniccats_PN7150(uint8_t IRQpin, uint8_t VENpin, uin
 
 uint8_t Electroniccats_PN7150::begin()
 {
-    Wire.begin();
+    _wire->begin();
     digitalWrite(_VENpin, HIGH);
     delay(1);
     digitalWrite(_VENpin, LOW);
@@ -77,15 +76,15 @@ bool Electroniccats_PN7150::hasMessage() const
 uint8_t Electroniccats_PN7150::writeData(uint8_t txBuffer[], uint32_t txBufferLevel) const
 {
     uint32_t nmbrBytesWritten = 0;
-    Wire.beginTransmission((uint8_t)_I2Caddress); //configura transmision
-    nmbrBytesWritten = Wire.write(txBuffer, (size_t)(txBufferLevel)); //carga en buffer
+    _wire->beginTransmission((uint8_t)_I2Caddress); //configura transmision
+    nmbrBytesWritten = _wire->write(txBuffer, (size_t)(txBufferLevel)); //carga en buffer
     #ifdef DEBUG2
         Serial.println("[DEBUG] written bytes = 0x"+String(nmbrBytesWritten,HEX));
     #endif
     if (nmbrBytesWritten == txBufferLevel)
     {
         byte resultCode;
-        resultCode = Wire.endTransmission(); //envio de datos segun yo
+        resultCode = _wire->endTransmission(); //envio de datos segun yo
         #ifdef DEBUG2
         Serial.println("[DEBUG] write data code = 0x"+String(resultCode,HEX));
         #endif
@@ -102,16 +101,15 @@ uint32_t Electroniccats_PN7150::readData(uint8_t rxBuffer[]) const
     uint32_t bytesReceived; // keeps track of how many bytes we actually received
     if (hasMessage())
     {                                                              // only try to read something if the PN7150 indicates it has something
-        bytesReceived = Wire.requestFrom(_I2Caddress, (uint8_t)3); // first reading the header, as this contains how long the payload will be
-       
+        bytesReceived = _wire->requestFrom(_I2Caddress, (uint8_t)3); // first reading the header, as this contains how long the payload will be
         //Imprimir datos de bytes received, tratar de extraer con funcion read
         //Leer e inyectar directo al buffer los siguientes 3
         #ifdef DEBUG2
         Serial.println("[DEBUG] bytesReceived = 0x"+String(bytesReceived,HEX));
         #endif
-        rxBuffer[0] = Wire.read();
-        rxBuffer[1] = Wire.read();
-        rxBuffer[2] = Wire.read();
+        rxBuffer[0] = _wire->read();
+        rxBuffer[1] = _wire->read();
+        rxBuffer[2] = _wire->read();
         #ifdef DEBUG2
         for(int i=0;i<3;i++){
              Serial.println("[DEBUG] Byte["+String(i)+"] = 0x"+String(rxBuffer[i],HEX));
@@ -120,14 +118,14 @@ uint32_t Electroniccats_PN7150::readData(uint8_t rxBuffer[]) const
         uint8_t payloadLength = rxBuffer[2];
         if (payloadLength > 0)
         {
-            bytesReceived += Wire.requestFrom(_I2Caddress, (uint8_t)payloadLength); // then reading the payload, if any
+            bytesReceived += _wire->requestFrom(_I2Caddress, (uint8_t)payloadLength); // then reading the payload, if any
             #ifdef DEBUG2
             Serial.println("[DEBUG] payload bytes = 0x"+String(bytesReceived-3,HEX));
             #endif
             uint32_t index = 3;
             while (index < bytesReceived)
             {
-                rxBuffer[index] = Wire.read();
+                rxBuffer[index] = _wire->read();
                 #ifdef DEBUG2
                 Serial.println("[DEBUG] payload["+String(index)+"] = 0x"+String(rxBuffer[index],HEX));
                 #endif
@@ -1262,7 +1260,7 @@ bool Electroniccats_PN7150::ConfigureSettings(void)
     }
 #endif
 
-    /* All further settings are not versatile, so configuration only applied if there are changes (application build timestamp) 
+    /* All further settings are not versatile, so configuration only applied if there are changes (application build timestamp)
        or in case of PN7150B0HN/C11004 Anti-tearing recovery procedure inducing RF setings were restored to their default value */
 #if (NXP_CORE_CONF_EXTN | NXP_CLK_CONF | NXP_TVDD_CONF | NXP_RF_CONF)
     /* First read timestamp stored in NFC Controller */
