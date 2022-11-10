@@ -590,14 +590,14 @@ bool Electroniccats_PN7150::WaitForDiscoveryNotification(RfIntf_t *pRfIntf, uint
     uint8_t saved_NTF[7];
 
     gNextTag_Protocol = PROT_UNDETERMINED;
+    bool getFlag = false;
 wait:
     do
     {
-        getMessage(
+        getFlag = getMessage(
             tout > 0 ? tout : 1337
         ); //Infinite loop, waiting for response
-    } while ((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03)));
-
+    } while (((rxBuffer[0] != 0x61) || ((rxBuffer[1] != 0x05) && (rxBuffer[1] != 0x03))) && (getFlag == true));
     gNextTag_Protocol = PROT_UNDETERMINED;
 
     /* Is RF_INTF_ACTIVATED_NTF ? */
@@ -1104,17 +1104,26 @@ bool Electroniccats_PN7150::StopDiscovery(void)
     return SUCCESS;
 }
 
-bool Electroniccats_PN7150::ConfigureSettings(void)
+bool Electroniccats_PN7150::ConfigureSettings(uint8_t *uidcf, uint8_t uidlen)
 {
 
 #if NXP_CORE_CONF
     /* NCI standard dedicated settings
  * Refer to NFC Forum NCI standard for more details
  */
-    uint8_t NxpNci_CORE_CONF[] = {
+ 
+    uint8_t NxpNci_CORE_CONF[20] = {
         0x20, 0x02, 0x05, 0x01, /* CORE_SET_CONFIG_CMD */
         0x00, 0x02, 0x00, 0x01  /* TOTAL_DURATION */
     };
+    
+    if(uidcf[0] == NULL)
+      uidlen = 8;    
+    else {
+      Serial.println("NFC UID will be changed");
+      memcpy(&NxpNci_CORE_CONF[0], uidcf, 20);
+    }
+
 #endif
 
 #if NXP_CORE_CONF_EXTN
@@ -1231,10 +1240,10 @@ bool Electroniccats_PN7150::ConfigureSettings(void)
 
     /* Apply settings */
 #if NXP_CORE_CONF
-    if (sizeof(NxpNci_CORE_CONF) != 0)
+    if (uidlen != 0) //sizeof(NxpNci_CORE_CONF) != 0)
     {
         isResetRequired = true;
-        (void)writeData(NxpNci_CORE_CONF, sizeof(NxpNci_CORE_CONF));
+        (void)writeData(NxpNci_CORE_CONF, uidlen); //sizeof(NxpNci_CORE_CONF));
         getMessage();
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00))
         {
