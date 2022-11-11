@@ -1121,6 +1121,7 @@ bool Electroniccats_PN7150::ConfigureSettings(uint8_t *uidcf, uint8_t uidlen)
       uidlen = 8;    
     else {
       Serial.println("NFC UID will be changed");
+      uidlen+=10;
       memcpy(&NxpNci_CORE_CONF[0], uidcf, 20);
     }
 
