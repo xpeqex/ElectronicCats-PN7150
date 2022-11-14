@@ -1392,6 +1392,24 @@ bool Electroniccats_PN7150::ConfigureSettings(void)
     return SUCCESS;
 }
 
+//Print hex data buffer in format
+void printbuf(const byte * data, const uint32_t numBytes) {
+  uint32_t szPos;
+  for (szPos = 0; szPos < numBytes; szPos++) {
+    Serial.print(F("0x"));
+    // Append leading 0 for small values
+    if (data[szPos] <= 0xF)
+      Serial.print(F("0"));
+
+    Serial.print(data[szPos] & 0xff, HEX);
+    if ((numBytes > 1) && (szPos != numBytes - 1)) {
+      Serial.print(F(" "));
+    }
+  }
+  Serial.println();
+}
+
+
 bool Electroniccats_PN7150::ConfigureSettings(uint8_t *uidcf, uint8_t uidlen)
 {
 
@@ -1400,17 +1418,21 @@ bool Electroniccats_PN7150::ConfigureSettings(uint8_t *uidcf, uint8_t uidlen)
  * Refer to NFC Forum NCI standard for more details
  */
  
+    
     uint8_t NxpNci_CORE_CONF[20] = {
-        0x20, 0x02, 0x05, 0x01, /* CORE_SET_CONFIG_CMD */
-        0x00, 0x02, 0x00, 0x01  /* TOTAL_DURATION */
+        0x20, 0x02, 0x05, 0x01, // CORE_SET_CONFIG_CMD 
+        0x00, 0x02, 0x00, 0x01  // TOTAL_DURATION 
     };
     
     if(uidlen == 0)
       uidlen = 8;    
     else {
-      Serial.println("NFC UID will be changed");
+      Serial.println("NFC UID changed, new CORE_CONF:");
       uidlen+= 10;
       memcpy(&NxpNci_CORE_CONF[0], uidcf, uidlen);
+
+      printbuf(NxpNci_CORE_CONF, uidlen);
+
     }
 
 #endif
@@ -1533,7 +1555,7 @@ bool Electroniccats_PN7150::ConfigureSettings(uint8_t *uidcf, uint8_t uidlen)
     {
         isResetRequired = true;
         (void)writeData(NxpNci_CORE_CONF, uidlen); //sizeof(NxpNci_CORE_CONF));
-        getMessage();
+        getMessage(100);
         if ((rxBuffer[0] != 0x40) || (rxBuffer[1] != 0x02) || (rxBuffer[3] != 0x00) || (rxBuffer[4] != 0x00))
         {
 #ifdef SerialUSB
