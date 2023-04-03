@@ -1,5 +1,7 @@
 # Number of days of inactivity before an issue becomes stale
 daysUntilStale: 1
+# Number of days of inactivity before a stale issue is closed
+daysUntilClose: 2
 # Issues with these labels will never be considered stale
 exemptLabels:
 - Bug
@@ -17,7 +19,5 @@ markComment: >
 
   Kind regards,
   Electronic Cats Support Team
-# Comment to post when closing a stale issue. Set to `false` to disable
-closeComment: true
 # Limit to only `issues` or `pulls`
 only: issues
