@@ -12,6 +12,7 @@ exemptLabels:
 # Label to use when marking an issue as stale
 staleLabel: First warning
 # Comment to post when marking an issue as stale. Set to `false` to disable
+markComment: false
 closeComment: >
   This is a message to remind you that your request was pending for 8 days. 
   
